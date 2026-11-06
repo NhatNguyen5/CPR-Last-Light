@@ -48,7 +48,7 @@ export function rollDamage({label = 'Damage', count = 4, sides = 6, modifier = 0
   return {kind:'damage',label,modifier,dice,sides,total:dice.reduce((a,b)=>a+b,0)+modifier}
 }
 
-export function readRollLog(storage) {
+export function readRollLog(storage,scope='') {
   try {
     const raw=JSON.parse(storage?.getItem(ROLL_LOG_KEY)||'[]')
     return Array.isArray(raw)?raw.filter(x=>x&&['check','initiative','damage','facedown'].includes(x.kind)&&Number.isFinite(x.total)).slice(0,30):[]
