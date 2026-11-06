@@ -185,6 +185,37 @@ function App(){
    adjustLuck(-spentLuckRef.current)
   }
  }
+ const rollScopeFor=(key)=>key===DEFAULT_PROFILE_KEY?'':key
+ const switchProfile=(key)=>{
+  const candidate=readProfiles(browserStorage()).find(p=>p.key===key)
+  if(!candidate)return
+  activeKeyRef.current=key
+  requestSeqRef.current+=1
+  setProfiles(readProfiles(browserStorage()))
+  setActiveProfileKey(browserStorage(),key)
+  setActiveKey(key)
+  const snapshot=readProfileSnapshot(browserStorage(),candidate)
+  setSheet(snapshot?.sheet??null)
+  setMode(snapshot?'cached':'disconnected')
+  setLastFetched(snapshot?.savedAt?new Date(snapshot.savedAt):null)
+  setGearDraft(readProfileDraft(browserStorage(),key))
+  setRollHistory(readRollLog(browserStorage(),rollScopeFor(key)))
+  setRollRequest(null);setHistoryOpen(false);setSyncOpen(false);setCharacterMenuOpen(false)
+  setTab('overview');setError('')
+  fileIdRef.current=candidate.fileId||''
+  setFileId(candidate.fileId||'')
+  if(candidate.source==='drive'&&candidate.fileId&&tokenRef.current){
+   refresh(candidate.fileId,tokenRef.current,{expectedKey:key})
+  }
+  window.scrollTo?.({top:0,behavior:'instant'})
+ }
+ const updateGearDraft=(next)=>{
+  setGearDraft(current=>{
+   const draft=typeof next==='function'?next(current):next
+   writeProfileDraft(browserStorage(),activeKeyRef.current,draft)
+   return draft
+  })
+ }
  const refresh=useCallback(async(id,accessToken=tokenRef.current)=>{
    if(!accessToken){setError('Sign in to Google first.');return false}
    setBusy(true);setError('')
