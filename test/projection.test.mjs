@@ -37,3 +37,11 @@ test('introduced known NPCs project only explicitly visible fields; no prepared 
  assert.ok(!JSON.stringify(p).includes('Do not export'))
  assert.ok(!JSON.stringify(p).includes('Unknown operative'))
 })
+
+test('unspent IP and optional player-visible Reputation are read without defaults',()=>{
+  const projected=projectPlayer({...sample,player_character:{...sample.player_character,ip:0,reputation:3}})
+  const view=getViewModel(validatePlayerSheet(projected))
+  assert.equal(view.ip,0)
+  assert.equal(view.reputation,3)
+  assert.equal(getViewModel(validatePlayerSheet(projectPlayer(sample))).reputation,null)
+})
