@@ -327,14 +327,14 @@ function App(){
    document.addEventListener('keydown',onKey)
    return ()=>document.removeEventListener('keydown',onKey)
  },[rollRequest,historyOpen,syncOpen])
- const CurrentPage=pages[tab]||Overview
+ const CurrentPage=tab==='overview'&&activeKey!==DEFAULT_PROFILE_KEY?GenericOverview:tab==='exec'?RolePage:(pages[tab]||Overview)
  const activeTab=agentSubs.has(tab)?'agent':tab
  return <div className="app">
   <aside className="sidebar">
-   <div className="brand"><Logo/><div><div className="brand-title">HELIX <span>MERIDIAN</span></div><div className="brand-sub">CORPORATE SYSTEMS / N.C.</div></div></div>
+   <div className="brand">{activeKey===DEFAULT_PROFILE_KEY?<Logo/>:<UserRound size={33}/>}<div><div className="brand-title">{activeKey===DEFAULT_PROFILE_KEY?<>HELIX <span>MERIDIAN</span></>:<>RED <span>COMPANION</span></>}</div><div className="brand-sub">{activeKey===DEFAULT_PROFILE_KEY?'CORPORATE SYSTEMS / N.C.':'MULTI-CHARACTER / PRIVATE'}</div></div></div>
    <div className="sidebar-line"/>
    <div className="side-kicker">PERSONNEL DATABASE</div>
-   <nav aria-label="Character dossier sections">{nav.map(([id,label,Icon],i)=><button key={id} className={'nav-link '+(activeTab===id?'selected':'')} onClick={()=>goToPage(id)}><Icon size={18} strokeWidth={1.7}/><span>{label}</span>{tab===id&&<ChevronRight size={15} className="nav-chevron"/>}</button>)}</nav>
+   <nav aria-label="Character dossier sections">{nav.map(([id,label,Icon],i)=><button key={id} className={'nav-link '+(activeTab===id?'selected':'')} onClick={()=>goToPage(id)}><Icon size={18} strokeWidth={1.7}/><span>{id==='exec'?(vm?.role||'Role'):label}</span>{tab===id&&<ChevronRight size={15} className="nav-chevron"/>}</button>)}</nav>
    <div className="sidebar-spacer"/>
    <div className="sidebar-info"><div className="side-kicker">DATA CONNECTION</div><div className="connection-line"><i className={'connection-led '+(mode==='drive'?'on':'')}/>{mode==='drive'?'DRIVE CONNECTED':mode==='cached'?'SAVED OFFLINE COPY':mode==='local'?'LOCAL EXPORT':'NOT CONNECTED'}</div><p>PLAYER-ONLY PROJECTION</p><div className="build-id">CPR // LAST LIGHT</div></div>
   </aside>
@@ -348,7 +348,7 @@ function App(){
    </main>
    <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
   </div>
-  <nav className="mobile-bottom-nav" aria-label="Main character pages">{nav.map(([id,label,Icon])=><button key={id} className={activeTab===id?'is-active':''} aria-current={activeTab===id?'page':undefined} onClick={()=>goToPage(id)}><Icon size={20} strokeWidth={2}/><span>{label}</span></button>)}</nav>
+  <nav className="mobile-bottom-nav" aria-label="Main character pages">{nav.map(([id,label,Icon])=><button key={id} className={activeTab===id?'is-active':''} aria-current={activeTab===id?'page':undefined} onClick={()=>goToPage(id)}><Icon size={20} strokeWidth={2}/><span>{id==='exec'?(vm?.role||'Role'):label}</span></button>)}</nav>
   <RollDialog request={rollRequest} onClose={()=>setRollRequest(null)} onSave={saveLocalRoll} luckRemaining={luckRemaining}/>
   {historyOpen&&<RollHistoryDialog history={rollHistory} onClose={()=>setHistoryOpen(false)} onClear={deleteRollHistory}/>}
   <input ref={inputRef} type="file" accept=".json,application/json" hidden onChange={importLocal}/>
