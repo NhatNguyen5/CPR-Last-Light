@@ -183,7 +183,7 @@ export function CombatPage({vm,onRoll,history,onShowHistory,luckMax=0,luckRemain
   <div className="directory-heading">SOCIAL CONFRONTATION</div>
   <div className="combat-row facedown-combat-row">
    <div><strong>Facedown</strong><span>Opposed · COOL + Reputation + 1d10</span><small>COOL {human(stat.COOL)} · Reputation confirmed before rolling</small></div>
-   <button className="roll-trigger" type="button" disabled={!Number.isInteger(stat.COOL)} aria-label="Open Facedown roll" onClick={()=>onRoll({kind:'facedown',label:'Facedown',cool:stat.COOL,base:stat.COOL})}><Dices size={18}/> Facedown</button>
+   <button className="roll-trigger" type="button" disabled={!Number.isInteger(stat.COOL)} aria-label="Open Facedown roll" onClick={()=>onRoll({kind:'facedown',label:'Facedown',cool:stat.COOL,base:stat.COOL,reputation:vm.reputation})}><Dices size={18}/> Facedown</button>
   </div>
   <div className="directory-heading">DAMAGE DICE</div>
   <div className="combat-row"><div><strong>Very Heavy Pistol</strong><span>4d6 damage if a hit is confirmed</span><small>No ammo, HP, or armor is changed by rolling here.</small></div><button className="roll-trigger" onClick={()=>onRoll({kind:'damage',label:'Very Heavy Pistol · 4d6 damage',count:4,sides:6})}><Dices size={18}/> 4d6</button></div>
@@ -209,7 +209,7 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0}) {
  const [opponentTotal,setOpponentTotal]=useState('')
  const [result,setResult]=useState(null)
  const [error,setError]=useState('')
- useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setReputation('');setOpponentTotal('');setResult(null);setError('')},[request])
+ useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setReputation(Number.isInteger(request?.reputation)?String(request.reputation):'');setOpponentTotal('');setResult(null);setError('')},[request])
  if(!request)return null
  const roll=()=>{
   const m=Number(modifier||0)
@@ -243,7 +243,7 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0}) {
   <div className="dossier-top"><span className="micro-label">LOCAL DICE TERMINAL</span><button className="icon-button" onClick={onClose} aria-label="Close roller"><X size={19}/></button></div>
   <h2 id="dice-title">{request.label}</h2><p className="subtle smaller">{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='initiative'?'REF + 1d10 (no Skill critical explosion)':request.kind==='facedown'?'COOL + Reputation + 1d10 · opposed (no Skill critical explosion)':'STAT + Skill + 1d10'}</p>
   {!result?<>{request.untrained&&<p className="untrained-note">Untrained attempt: Skill Level 0. Whether this task is possible without specific training, equipment, or knowledge is for the GM to decide.</p>}{request.requiresSpecialization&&<label className="specialization-label">Specific field / language / style<input type="text" value={specialization} maxLength={100} onChange={e=>setSpecialization(e.target.value)} placeholder="Name the attempted specialization" aria-label="Attempted specialization"/></label>}
- {request.kind==='facedown'&&<p className="facedown-note">Reputation is not recorded in Nathan's current player sheet. Enter a GM-confirmed value for this roll. A defining reputation for cowardice counts as negative. The GM decides when Facedowns occur.</p>}
+ {request.kind==='facedown'&&<p className="facedown-note">{Number.isInteger(request.reputation)?'Reputation is prefilled from the saved player sheet; confirm applicable adjustments with the GM.':'Reputation is not recorded in Nathan’s current player sheet. Enter a GM-confirmed value.'} A defining reputation for cowardice counts as negative. The GM decides when Facedowns occur.</p>
  <div className="roll-fields">
  {request.kind==='facedown'&&<label>Reputation (required)<input type="number" min="-10" max="10" step="1" value={reputation} onChange={e=>setReputation(e.target.value)} placeholder="Not recorded" aria-label="Facedown Reputation"/></label>}<label>Modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Modifier"/></label>{request.kind==='facedown'&&<label>Opponent total (optional, GM-supplied)<input type="number" step="1" value={opponentTotal} onChange={e=>setOpponentTotal(e.target.value)} placeholder="Pending" aria-label="GM-supplied Facedown opponent total"/></label>}{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
   {request.kind==='check'&&<p className="roll-luck-hint">LUCK is allowed on this Skill Check, including combat checks. {luckRemaining} point(s) remain in the local tracker. If using any, commit them <strong>before</strong> rolling, include the bonus in <strong>Modifier</strong>, and mark them spent in Combat → LUCK. The modifier does not automatically deduct LUCK.</p>}
