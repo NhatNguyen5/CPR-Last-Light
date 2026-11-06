@@ -8,7 +8,7 @@ A GitHub Pages-ready, read-only React/Vite viewer for Nathan Guen's **Cyberpunk 
 
 - A private player-safe JSON projection of canonical revision 1 has been uploaded to the campaign folder on Drive.
 - The viewer performs Google sign-in via Google Identity Services, asks for per-file Drive scope (`drive.file`), and uses Google Picker to grant this OAuth application access to the selected existing JSON file.
-- The page downloads that private JSON from Drive in memory with `files.get?alt=media`. It rejects a full canonical save, wrong campaign ID, or wrong character.
+- The page downloads that private JSON from Drive with `files.get?alt=media`. It rejects a full canonical save, wrong campaign ID, or wrong character. After you connect, it caches the player-only projection in browser localStorage (never the OAuth token) for immediate offline reopening.
 - The deployment workflow builds and publishes just `dist/` with GitHub Pages. It does not copy any JSON character data into the repository.
 
 ## 1. GitHub repository and source deployment
@@ -59,9 +59,9 @@ In repo **Settings → Pages → Build and deployment**, select **GitHub Actions
 
 1. Open your GitHub Pages site and press **Connect Google Drive**. Authorize the single-file `drive.file` scope with the Google account that owns the character projection.
 2. If the first download is denied (expected for an existing file not yet opened by the OAuth app), use **Select Drive file** and select `PLAYER_SHEET.json`, **not** `CAMPAIGN_STATE.json`.
-3. The file picker grants this OAuth client per-file access. The viewer validates the selected file and remembers **only the file ID** in localStorage. The short-lived OAuth access token and sheet contents remain in memory and disappear on reload/sign-out; access token is not saved locally.
-4. Press **Refresh** to fetch the current private projection again. Refreshing does not change fictional time or game resources.
-5. If sign-in is unavailable, **Open local export** loads `PLAYER_SHEET.json` from your computer entirely in-browser without sending its contents to a server. That view is clearly marked **LOCAL SNAPSHOT**, not synced.
+3. The file picker grants this OAuth client per-file access. The viewer remembers the file ID and saves a **player-only offline snapshot** in the current browser profile, clearly marked as potentially outdated. **No OAuth token, refresh token, or canonical GM state is cached.**
+4. Later visits show the last cached player sheet immediately, without sign-in. Tap **Connect & refresh** to request the latest Drive data. The token request reuses existing Google consent when possible (`prompt: ""`), but Google may still show an account chooser or consent UI. Testing-mode authorizations can expire. Refreshing does not advance the campaign.
+5. Tap **Remove saved offline copy** to clear the cached character data from this device without changing Drive. **Sign out** also deletes the cached snapshot. Local JSON import remains available and is not automatically saved offline.
 
 **Important:** `drive.file` cannot automatically see a pre-existing arbitrary Drive file by ID until it is selected using Picker for this app. We explicitly avoid requesting broad `drive.readonly` access.
 
@@ -81,7 +81,7 @@ A full automation can later be added with a privileged Apps Script or other serv
 
 ## Security notes
 
-- The character's private data **never appears in the GitHub repository or GitHub Pages build artifact**. `VITE_*` config is public, but the Drive file remains protected by Google's OAuth access controls.
+- The character's private data **never appears in the GitHub repository or GitHub Pages build artifact**. After Drive connection the viewer stores a player-only copy in the visiting browser's localStorage for convenience. Anyone with access to that unlocked browser profile may read it. Remove the offline copy on shared devices. `VITE_*` config is public, but the Drive file remains protected by Google's OAuth access controls.
 - **Do not share the player JSON with “Anyone with the link.”** The viewer is able to read it only after a real account authorizes it.
 - OAuth scope is `https://www.googleapis.com/auth/drive.file`, not unrestricted Drive access. File access is granted with Picker. **This per-file scope technically permits writes to the selected projection; the application itself makes GET requests only.** Never select the canonical file.
 - The viewer does **not** perform writes, roll dice, or change campaign state.

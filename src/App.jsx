@@ -8,9 +8,11 @@ import {
 import {config} from './config.js'
 import {fetchDriveJson, initTokenClient, loadGoogleSdk, openGooglePicker} from './lib/drive.js'
 import {getViewModel, validatePlayerSheet} from './lib/projection.js'
+import {readCachedPlayerSheet, writeCachedPlayerSheet, clearCachedPlayerSheet} from './lib/cache.js'
 import {buildSkillGroups, SKILL_MAX_LEVEL} from './lib/skillCatalog.js'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
+const browserStorage = () => {try{return window.localStorage}catch{return null}}
 const nav = [
   ['overview','Overview',Layers3],['skills','Skills',Activity],['inventory','Inventory',Shield],
   ['cyberware','Cyberware',Cpu],['contacts','Contacts',UsersRound],['records','Records',FileJson2],
@@ -143,14 +145,17 @@ function EmptyState({onConnect, onSelectLocal,loading,configured,error,hasToken,
 function App(){
  const [tab,setTab]=useState('overview')
  const [navOpen,setNavOpen]=useState(false)
- const [sheet,setSheet]=useState(null)
+ const [initialCache]=useState(()=>readCachedPlayerSheet(browserStorage(),config.expectedPlayerFileId))
+ const [sheet,setSheet]=useState(initialCache?.sheet??null)
  const [token,setToken]=useState('')
- const [mode,setMode]=useState('disconnected')
+ const [mode,setMode]=useState(initialCache?'cached':'disconnected')
  const [error,setError]=useState('')
  const [busy,setBusy]=useState(false)
+ const [needsConsent,setNeedsConsent]=useState(false)
+ const [offlineCopyEnabled,setOfflineCopyEnabled]=useState(true)
  const [sdkReady,setSdkReady]=useState(false)
  const [fileId,setFileId]=useState(()=>{try{return localStorage.getItem(FILE_KEY)||config.expectedPlayerFileId}catch{return config.expectedPlayerFileId}})
- const [lastFetched,setLastFetched]=useState(null)
+ const [lastFetched,setLastFetched]=useState(initialCache?new Date(initialCache.savedAt):null)
  const tokenRef=useRef('')
  const tokenClientRef=useRef(null)
  const fileIdRef=useRef(fileId)
@@ -162,27 +167,30 @@ function App(){
    setBusy(true);setError('')
    try{
      const result=validatePlayerSheet(await fetchDriveJson(id,accessToken))
-     setSheet(result);setMode('drive');setLastFetched(new Date());setFileId(id);fileIdRef.current=id
+     const fetchedAt=Date.now()
+     setSheet(result);setMode('drive');setLastFetched(new Date(fetchedAt));setFileId(id);fileIdRef.current=id
+     if(offlineCopyEnabled)writeCachedPlayerSheet(browserStorage(),id,config.expectedPlayerFileId,result,fetchedAt)
      try{localStorage.setItem(FILE_KEY,id)}catch{}
      return true
    }catch(e){setError(e.message||String(e));return false}
    finally{setBusy(false)}
- },[])
+ },[offlineCopyEnabled])
  useEffect(()=>{
    if(!cfgReady)return
    let cancelled=false
    loadGoogleSdk().then(()=>{if(cancelled)return
      const client=initTokenClient(config.googleClientId,async response=>{
        if(cancelled)return
-       if(response.error||!response.access_token){setError(`Sign-in was not completed: ${response.error||'no access token'}`);setBusy(false);return}
-       tokenRef.current=response.access_token;setToken(response.access_token);setBusy(false)
+       if(response.error||!response.access_token){setError(`Google authorization requires attention: ${response.error||'no access token'}. Tap Connect again to grant access if needed.`);setNeedsConsent(true);setBusy(false);return}
+       tokenRef.current=response.access_token;setToken(response.access_token);setNeedsConsent(false);setBusy(false)
        if(fileIdRef.current)await refresh(fileIdRef.current,response.access_token)
      })
      tokenClientRef.current=client;setSdkReady(true)
    }).catch(e=>{if(!cancelled)setError(e.message)})
    return ()=>{cancelled=true}
  },[cfgReady,refresh])
- const connect=()=>{setError('');if(!sdkReady){setError('Google SDK is not ready yet.');return}setBusy(true);tokenClientRef.current?.requestAccessToken({prompt: 'consent'})}
+ const connect=()=>{setError('');if(!sdkReady){setError('Google SDK is not ready yet.');return}setBusy(true);tokenClientRef.current?.requestAccessToken({prompt:needsConsent?'consent':''})}
+ const removeOfflineCopy=()=>{clearCachedPlayerSheet(browserStorage());setOfflineCopyEnabled(false);if(mode==='cached'){setSheet(null);setMode('disconnected');setLastFetched(null)}}
  const picker=()=>{
    try{
      if(!tokenRef.current){setError('Sign in to Google before selecting a file.');return}
@@ -201,6 +209,7 @@ function App(){
  }
  const signOut=()=>{
    if(tokenRef.current&&window.google?.accounts?.oauth2)window.google.accounts.oauth2.revoke(tokenRef.current,()=>{})
+   clearCachedPlayerSheet(browserStorage())
    tokenRef.current='';setToken('');setSheet(null);setMode('disconnected');setLastFetched(null);setError('')
  }
  const CurrentPage=pages[tab]||Overview
@@ -211,16 +220,18 @@ function App(){
    <div className="side-kicker">PERSONNEL DATABASE</div>
    <nav aria-label="Character dossier sections">{nav.map(([id,label,Icon],i)=><button key={id} className={'nav-link '+(tab===id?'selected':'')} onClick={()=>{setTab(id);setNavOpen(false)}}><Icon size={18} strokeWidth={1.7}/><span>{label}</span>{tab===id&&<ChevronRight size={15} className="nav-chevron"/>}</button>)}</nav>
    <div className="sidebar-spacer"/>
-   <div className="sidebar-info"><div className="side-kicker">DATA CONNECTION</div><div className="connection-line"><i className={'connection-led '+(mode==='drive'?'on':'')}/>{mode==='drive'?'DRIVE CONNECTED':mode==='local'?'LOCAL EXPORT':'NOT CONNECTED'}</div><p>PLAYER-ONLY PROJECTION</p><div className="build-id">CPR // LAST LIGHT</div></div>
+   <div className="sidebar-info"><div className="side-kicker">DATA CONNECTION</div><div className="connection-line"><i className={'connection-led '+(mode==='drive'?'on':'')}/>{mode==='drive'?'DRIVE CONNECTED':mode==='cached'?'SAVED OFFLINE COPY':mode==='local'?'LOCAL EXPORT':'NOT CONNECTED'}</div><p>PLAYER-ONLY PROJECTION</p><div className="build-id">CPR // LAST LIGHT</div></div>
   </aside>
   <div className="main-region">
-   <header className="topbar"><div className="top-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={()=>setNavOpen(true)}><Menu/></button><span className="breadcrumb">SYSTEM <ChevronRight size={12}/> PERSONNEL <ChevronRight size={12}/><b>{tab.toUpperCase()}</b></span></div><div className="top-actions"><Tag accent={mode==='drive'}>{mode==='drive'?'SYNCED TO DRIVE':mode==='local'?'OFFLINE VIEW':'PRIVATE ACCESS'}</Tag>{token&&<button className="icon-button" onClick={picker} title="Select another Drive file"><Cloud size={18}/></button>}{token&&<button className="icon-button" onClick={()=>refresh(fileId)} disabled={busy} title="Refresh player sheet"><RefreshCcw size={18} className={busy?'spinning':''}/></button>}{token&&<button className="icon-button" onClick={signOut} title="Sign out"><LogOut size={18}/></button>}</div></header>
+   <header className="topbar"><div className="top-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={()=>setNavOpen(true)}><Menu/></button><span className="breadcrumb">SYSTEM <ChevronRight size={12}/> PERSONNEL <ChevronRight size={12}/><b>{tab.toUpperCase()}</b></span></div><div className="top-actions"><Tag accent={mode==='drive'}>{mode==='drive'?'DRIVE LOADED':mode==='cached'?'OFFLINE COPY':mode==='local'?'OFFLINE VIEW':'PRIVATE ACCESS'}</Tag>{token&&<button className="icon-button" onClick={picker} title="Select another Drive file"><Cloud size={18}/></button>}{token&&<button className="icon-button" onClick={()=>refresh(fileId)} disabled={busy} title="Refresh player sheet"><RefreshCcw size={18} className={busy?'spinning':''}/></button>}{token&&<button className="icon-button" onClick={signOut} title="Sign out and erase offline copy"><LogOut size={18}/></button>}</div></header>
    <main className="main-body"><div className="section-header"><div><div className="overline">CASE FILE / {tab==='overview'?'IDENTITY & CAPABILITIES':tab.toUpperCase()}</div><h1>{vm?vm.name:'Executive Dossier'}<span className="header-period">.</span></h1><p>Restricted personnel terminal <span className="header-sep">/</span> {vm?`${vm.employer} · ${vm.department}`:'Authorized access required'}</p></div><div className="sheet-stamp"><div>{vm?`REVISION ${String(vm.revision).padStart(3,'0')}`:'SECURITY LEVEL 04'}</div><span>{vm?`${formatDate(vm.date)} / ${vm.time}`:'DRIVE AUTH REQUIRED'}</span></div></div>
+    {vm&&mode==='cached'&&<div className="cache-status-banner" role="status"><CloudOff size={21}/><div className="cache-status-copy"><strong>Saved offline snapshot · R{vm.revision}</strong><span>Last downloaded {lastFetched?.toLocaleString()||'at an unknown time'}. This might be outdated until you sync with Drive.</span></div><button className="btn primary" onClick={connect} disabled={!cfgReady||busy}>{busy?'CONNECTING…':'Connect & refresh'}</button><button className="cache-clear-btn" onClick={removeOfflineCopy}>Remove offline copy</button></div>}
+    {vm&&mode==='drive'&&offlineCopyEnabled&&<div className="cache-inline-controls"><span>Latest Drive data loaded · R{vm.revision}</span><button className="cache-clear-btn" onClick={removeOfflineCopy}>Remove saved offline copy</button></div>}
     {vm&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="EUROBUCKS" value={vm.credits} Icon={Wallet} hint="LIQUID BALANCE"/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
     {error&&vm&&<div className="alert error-alert top-error">{error}</div>}
     {vm?<CurrentPage vm={vm}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
    </main>
-   <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
+   <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
   </div>
   <input ref={inputRef} type="file" accept=".json,application/json" hidden onChange={importLocal}/>
   {navOpen&&<button className="mobile-shade" aria-label="Close menu" onClick={()=>setNavOpen(false)}/>}

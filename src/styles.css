@@ -43,3 +43,11 @@
 .skill-overcap{font:8px 'IBM Plex Mono',monospace;color:#edaf74}
 @media(max-width:1050px){.skill-category-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.skill-matrix-panel{padding:16px}.skill-category-grid{gap:12px}.skill-table-columns,.skill-table-row{grid-template-columns:minmax(0,1fr) 82px 47px 39px}.skill-table-name{font-size:11px;padding-left:9px}.skill-table-row.specialized .skill-table-name{padding-left:13px}.skill-table-name small{font-size:8px}.skill-category-heading h3{font-size:12px}.skill-tenbar{max-width:67px}}
+
+/* Explicitly distinguish an offline cache from fresh private Drive data. */
+.cache-status-banner{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:16px 19px;margin:-12px 0 22px;border:1px solid #806447;background:#2b241e;color:#ecc89f}
+.cache-status-banner>svg{flex:0 0 auto}.cache-status-copy{flex:1;min-width:215px;display:flex;flex-direction:column;gap:5px}
+.cache-status-copy strong{font-size:12px;letter-spacing:.02em}.cache-status-copy span{font-size:11px;line-height:1.5;color:#d0a984}
+.cache-status-banner .btn{min-height:37px;white-space:nowrap}.cache-clear-btn{border:0;background:none;color:#93bfb0;text-decoration:underline;text-underline-offset:3px;font-size:11px;padding:7px 5px}
+.cache-clear-btn:hover{color:#b8e4d4}.cache-inline-controls{display:flex;justify-content:flex-end;align-items:center;gap:14px;margin:-16px 0 19px;color:#6a9687;font:10px 'IBM Plex Mono',monospace}
+@media(max-width:760px){.cache-status-banner{margin:-4px 0 20px;padding:13px}.cache-status-banner .btn{flex:1}.cache-inline-controls{margin:-8px 0 18px;flex-wrap:wrap}}
