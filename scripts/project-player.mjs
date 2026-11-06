@@ -12,8 +12,8 @@ const PC_KEYS = [
   'condition','current_stats','cyberware','derived','education','equipment_item_ids','family_crisis',
   'freeform_agency','full_name','hair','hometown','id','ip','language_cultural','life_goal','money',
   'move_to_night_city','opening_preferences','origin','original_family_background','person_most_valued',
-  'personal_style','personality_baseline','prior_profession','pronouns','rank','regard_for_people',
-  'relationship_milestones','reputation','signature_eyewear','skill_allocation','skills','special_possession_item_id','top_value'
+  'personal_style','personality_baseline','prior_profession','pronouns','rank','regard_for_people','reputation',
+  'relationship_milestones','signature_eyewear','skill_allocation','skills','special_possession_item_id','top_value'
 ]
 const COMPANY_KEYS = ['id','name','industry','exec_division','headquarters','products','select_international_offices','boss_relationship']
 const ITEM_KEYS=['id','name','owner_id','quantity','condition','custody_or_location','acquisition','unit_cost_eb','total_cost_eb','notes']
