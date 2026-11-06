@@ -253,7 +253,7 @@ function App(){
    <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Main character pages">{nav.map(([id,label,Icon])=><button key={id} className={activeTab===id?'is-active':''} aria-current={activeTab===id?'page':undefined} onClick={()=>goToPage(id)}><Icon size={20} strokeWidth={2}/><span>{label}</span></button>)}</nav>
-  <RollDialog request={rollRequest} onClose={()=>setRollRequest(null)} onSave={saveLocalRoll} luckRemaining={luckRemaining} onSpendLuck={adjustLuck} luckReady={luckReady}/>
+  <RollDialog request={rollRequest} onClose={()=>setRollRequest(null)} onSave={saveLocalRoll} luckRemaining={luckRemaining}/>
   {historyOpen&&<RollHistoryDialog history={rollHistory} onClose={()=>setHistoryOpen(false)} onClear={deleteRollHistory}/>}
   <input ref={inputRef} type="file" accept=".json,application/json" hidden onChange={importLocal}/>
  </div>
