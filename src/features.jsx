@@ -168,15 +168,15 @@ export function CombatPage({vm,onRoll,history,onShowHistory,luckMax=0,luckRemain
  const skills=Object.fromEntries(vm.skills)
  const stat=vm.stats||{}
  const checks=[
-  {label:'Initiative',stat:'REF',rank:0,kind:'initiative',desc:'Turn order · REF + 1d10'},
-  {label:'Handgun',stat:'REF',rank:skills.Handgun||0,kind:'check',desc:'Very Heavy Pistol · no attack attempted'},
-  {label:'Evasion',stat:'DEX',rank:skills.Evasion||0,kind:'check',desc:'Defensive Skill Check'},
-  {label:'Brawling',stat:'DEX',rank:skills.Brawling||0,kind:'check',desc:'Unarmed Skill Check'},
+  {label:'Initiative',stat:'REF',rank:0,kind:'initiative',desc:'Turn order · REF + 1d10 · LUCK does not apply'},
+  {label:'Handgun',stat:'REF',rank:skills.Handgun||0,kind:'check',desc:'Very Heavy Pistol · combat Skill Check · LUCK eligible'},
+  {label:'Evasion',stat:'DEX',rank:skills.Evasion||0,kind:'check',desc:'Defensive Skill Check · LUCK eligible'},
+  {label:'Brawling',stat:'DEX',rank:skills.Brawling||0,kind:'check',desc:'Unarmed Skill Check · LUCK eligible'},
  ]
  return <div className="content-grid">
  <section className="panel span-8"><div className="panel-heading"><span className="micro-label">COMBAT REFERENCE</span><span className="tag">NO ACTIVE COMBAT</span></div>
   <div className="combat-vitals"><div><HeartPulse size={17}/><strong>{vm.hp}/{vm.maxHp}</strong><small>HP</small></div><div><Shield size={17}/><strong>{vm.armorBody}</strong><small>Body SP</small></div><div><Shield size={17}/><strong>{vm.armorHead}</strong><small>Head SP</small></div></div>
-  <div className="directory-heading">QUICK CHECKS</div><div className="combat-checks">{checks.map(c=><div className="combat-row" key={c.label}>
+  <div className="directory-heading">QUICK CHECKS</div><p className="combat-luck-hint">LUCK works on combat Skill Checks such as Handgun, Evasion, and Brawling. Commit it before rolling, add it to <strong>Modifier</strong>, then mark those points spent in the LUCK tracker. Not on Initiative or damage.</p><div className="combat-checks">{checks.map(c=><div className="combat-row" key={c.label}>
    <div><strong>{c.label}</strong><span>{c.desc}</span><small>{c.stat} {human(stat[c.stat])} {c.rank?`+ Skill ${c.rank}`:''}</small></div>
    <button className="roll-trigger" onClick={()=>onRoll({kind:c.kind,label:c.label,base:Number(stat[c.stat]||0)+c.rank,stat:c.stat,rank:c.rank})}><Dices size={18}/> +{Number(stat[c.stat]||0)+c.rank}</button>
   </div>)}</div>
@@ -192,25 +192,24 @@ export function CombatPage({vm,onRoll,history,onShowHistory,luckMax=0,luckRemain
   <div className="micro-label">SESSION RESOURCE / PLAYER TRACKER</div>
   <div className="luck-pool-title"><div><h2 className="page-side-title">LUCK</h2><p>{luckReady?'Remaining this game session':'Preparing local tracker'}</p></div><strong>{luckReady?luckRemaining:'—'}<small> / {luckMax}</small></strong></div>
   <div className="luck-pool-pips" aria-label={`LUCK: ${luckRemaining} of ${luckMax} remaining`}>{Array.from({length:luckMax},(_,i)=><span key={i} className={i<luckRemaining?'available':'spent'}/>)}</div>
-  <p className="subtle smaller">Commit points <strong>before</strong> a Check for +1 each. Core RED does not use LUCK for rerolls. The pool refills at the start of a new game session.</p>
+  <p className="subtle smaller">For any Skill Check, including combat attacks and defenses: spend LUCK <strong>before</strong> rolling, add +1 per point to the ordinary <strong>Modifier</strong> field, and mark the points spent below. LUCK cannot buy rerolls. This pool refills at the start of a new session.</p>
   <div className="luck-manual-actions"><button type="button" disabled={!luckReady||luckRemaining===0} onClick={onLuckSpend}>− Mark 1 spent</button><button type="button" disabled={!luckReady||luckRemaining===luckMax} onClick={onLuckUndo}>+ Undo 1 spend</button></div>
   <button type="button" className="luck-refill" disabled={!luckReady||luckRemaining===luckMax} onClick={onLuckReset}>Refill for new session (confirm)</button>
-  <p className="footnote">Manual adjustments are for tracking rolls outside this app and correcting mistakes. Session reset is explicit; nothing here changes Drive or the fictional clock.</p>
+  <p className="footnote">LUCK is deducted manually, not automatically from Modifier, because that value may also include unrelated bonuses or penalties. If you commit 2 LUCK, mark 2 points spent before rolling. A session reset is explicit; nothing here changes Drive or the fictional clock.</p>
   <div className="directory-heading">SESSION ROLLS</div><h2 className="page-side-title">Local history</h2><p className="subtle smaller">{history.length} rolls saved in this browser. They are not campaign checkpoint events.</p><button className="btn outline history-launch" onClick={onShowHistory}>View roll history <ChevronRight size={17}/></button>
   <p className="footnote">Set stakes and modifiers with the GM before consequential checks. These buttons calculate dice only; the GM adjudicates outcomes and saves approved changes.</p></section>
  </div>
 }
 
-export function RollDialog({request,onClose,onSave,luckRemaining=0,luckReady=false,onSpendLuck}) {
+export function RollDialog({request,onClose,onSave,luckRemaining=0}) {
  const [modifier,setModifier]=useState('0')
  const [dv,setDv]=useState('')
  const [specialization,setSpecialization]=useState('')
- const [luckPoints,setLuckPoints]=useState('0')
  const [reputation,setReputation]=useState('')
  const [opponentTotal,setOpponentTotal]=useState('')
  const [result,setResult]=useState(null)
  const [error,setError]=useState('')
- useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setLuckPoints('0');setReputation('');setOpponentTotal('');setResult(null);setError('')},[request])
+ useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setReputation('');setOpponentTotal('');setResult(null);setError('')},[request])
  if(!request)return null
  const roll=()=>{
   const m=Number(modifier||0)
@@ -218,11 +217,6 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0,luckReady=fal
   if(request.requiresSpecialization&&!specialization.trim()){setError('Name the specific subject, language, style, or field before rolling.');return}
   const parsedDv=dv.trim()===''?null:Number(dv)
   if(parsedDv!==null&&(!Number.isInteger(parsedDv)||parsedDv<0||parsedDv>100)){setError('Enter a DV from 0 to 100, or leave it blank.');return}
-  const allocatedLuck=request.kind==='check'?Number(luckPoints):0
-  if(request.kind==='check'&&(!Number.isInteger(allocatedLuck)||allocatedLuck<0||allocatedLuck>luckRemaining)){
-   setError('Choose a LUCK amount no greater than your remaining pool before rolling.');return
-  }
-  if(request.kind==='check'&&!luckReady){setError('LUCK tracker has not loaded yet.');return}
   let reputationValue=null, opposed=null
   if(request.kind==='facedown'){
    const rawRep=reputation.trim()
@@ -238,9 +232,8 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0,luckReady=fal
   }
   try{
    const rollLabel=request.requiresSpecialization?`${request.label} (${specialization.trim()})`:request.label
-   const data=request.kind==='facedown'?rollFacedown({cool:request.cool,reputation:reputationValue,modifier:m}):request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:rollLabel,count:request.count,sides:request.sides,modifier:m}):rollRedCheck({label:rollLabel,base:request.base,modifier:m+allocatedLuck})
-   if(allocatedLuck>0&&!onSpendLuck?.(allocatedLuck)){setError('LUCK pool changed; no points deducted and no roll recorded. Please reopen and confirm.');return}
-   const recorded={...data,dv:parsedDv,opponentTotal:request.kind==='facedown'?opposed:null,luckSpent:allocatedLuck,situationalModifier:m,at:Date.now()}
+   const data=request.kind==='facedown'?rollFacedown({cool:request.cool,reputation:reputationValue,modifier:m}):request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:rollLabel,count:request.count,sides:request.sides,modifier:m}):rollRedCheck({label:rollLabel,base:request.base,modifier:m})
+   const recorded={...data,dv:parsedDv,opponentTotal:request.kind==='facedown'?opposed:null,at:Date.now()}
    setResult(recorded);setError('');onSave(recorded)
   }catch(e){setError(e.message||String(e))}
  }
@@ -252,12 +245,13 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0,luckReady=fal
   {!result?<>{request.untrained&&<p className="untrained-note">Untrained attempt: Skill Level 0. Whether this task is possible without specific training, equipment, or knowledge is for the GM to decide.</p>}{request.requiresSpecialization&&<label className="specialization-label">Specific field / language / style<input type="text" value={specialization} maxLength={100} onChange={e=>setSpecialization(e.target.value)} placeholder="Name the attempted specialization" aria-label="Attempted specialization"/></label>}
  {request.kind==='facedown'&&<p className="facedown-note">Reputation is not recorded in Nathan's current player sheet. Enter a GM-confirmed value for this roll. A defining reputation for cowardice counts as negative. The GM decides when Facedowns occur.</p>}
  <div className="roll-fields">
- {request.kind==='facedown'&&<label>Reputation (required)<input type="number" min="-10" max="10" step="1" value={reputation} onChange={e=>setReputation(e.target.value)} placeholder="Not recorded" aria-label="Facedown Reputation"/></label>}<label>Situational modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Situational modifier"/></label>{request.kind==='facedown'&&<label>Opponent total (optional, GM-supplied)<input type="number" step="1" value={opponentTotal} onChange={e=>setOpponentTotal(e.target.value)} placeholder="Pending" aria-label="GM-supplied Facedown opponent total"/></label>}{request.kind==='check'&&<label>Commit LUCK before roll ({luckRemaining} left)<input type="number" min="0" max={luckRemaining} step="1" value={luckPoints} onChange={e=>setLuckPoints(e.target.value)} aria-label="LUCK points to spend before rolling"/></label>}{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
+ {request.kind==='facedown'&&<label>Reputation (required)<input type="number" min="-10" max="10" step="1" value={reputation} onChange={e=>setReputation(e.target.value)} placeholder="Not recorded" aria-label="Facedown Reputation"/></label>}<label>Modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Modifier"/></label>{request.kind==='facedown'&&<label>Opponent total (optional, GM-supplied)<input type="number" step="1" value={opponentTotal} onChange={e=>setOpponentTotal(e.target.value)} placeholder="Pending" aria-label="GM-supplied Facedown opponent total"/></label>}{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
+  {request.kind==='check'&&<p className="roll-luck-hint">LUCK is allowed on this Skill Check, including combat checks. {luckRemaining} point(s) remain in the local tracker. If using any, commit them <strong>before</strong> rolling, include the bonus in <strong>Modifier</strong>, and mark them spent in Combat → LUCK. The modifier does not automatically deduct LUCK.</p>}
   <div className="roll-base-display">{request.kind==='damage'?'Dice pool':request.kind==='facedown'?'COOL + Reputation':`Base ${request.base}`} <strong>{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='facedown'?`${request.cool} + ${reputation.trim()||'?'}`:`+${request.base}`}</strong></div>
   <button className="btn primary roll-now" onClick={roll}><Dices size={21}/> Roll dice</button></>:
   <div className="roll-result"><div className="dice-total">{result.total}</div><div className="micro-label">{result.critical?`CRITICAL ${result.critical.toUpperCase()}`:result.kind==='damage'?'DAMAGE TOTAL':result.kind==='facedown'?'FACEDOWN TOTAL · OPPOSED':'TOTAL ROLL'}</div>
-   <div className="roll-breakdown">{result.kind==='facedown'?<><span>COOL: {result.cool}</span><span>Reputation: {result.reputation>=0?'+':''}{result.reputation}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>d10: {result.first}</span><span>{result.opponentTotal===null?'Awaiting GM-supplied opponent result':result.total===result.opponentTotal?'Tie — no effect':result.total>result.opponentTotal?'Nathan rolled higher':'Opponent rolled higher'}</span></>:result.kind==='damage'?<><span>Dice: {result.dice.join(' + ')}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span></>:<><span>Base: {result.base}</span><span>Situational modifier: {result.situationalModifier>=0?'+':''}{result.situationalModifier}</span><span>LUCK committed before roll: +{result.luckSpent||0}</span><span>First d10: {result.first}</span>{result.second!==null&&<span>Critical follow-up: {result.critical==='success'?'+':'−'}{result.second}</span>}{result.dv!==null&&<span>DV: {result.dv} · {result.total>result.dv?'Beats DV':'Does not beat DV'}</span>}</>}</div>
-   <div className="roll-actions"><button className="btn outline" onClick={copy}><Copy size={16}/> Copy result</button><button className="btn primary" onClick={()=>{setLuckPoints('0');setResult(null)}}><RotateCcw size={16}/> New check</button></div>
+   <div className="roll-breakdown">{result.kind==='facedown'?<><span>COOL: {result.cool}</span><span>Reputation: {result.reputation>=0?'+':''}{result.reputation}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>d10: {result.first}</span><span>{result.opponentTotal===null?'Awaiting GM-supplied opponent result':result.total===result.opponentTotal?'Tie — no effect':result.total>result.opponentTotal?'Nathan rolled higher':'Opponent rolled higher'}</span></>:result.kind==='damage'?<><span>Dice: {result.dice.join(' + ')}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span></>:<><span>Base: {result.base}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>First d10: {result.first}</span>{result.second!==null&&<span>Critical follow-up: {result.critical==='success'?'+':'−'}{result.second}</span>}{result.dv!==null&&<span>DV: {result.dv} · {result.total>result.dv?'Beats DV':'Does not beat DV'}</span>}</>}</div>
+   <div className="roll-actions"><button className="btn outline" onClick={copy}><Copy size={16}/> Copy result</button><button className="btn primary" onClick={()=>setResult(null)}><RotateCcw size={16}/> New roll</button></div>
   </div>}
   {error&&<p className="alert error-alert">{error}</p>}
   {request.kind==='facedown'&&<p className="facedown-note">Tie: neither participant gains an advantage. Otherwise, the loser may back down or take −2 on future actions against the winner until defeating them once. The app does not assign an NPC's choice or enforce penalties.</p>}
