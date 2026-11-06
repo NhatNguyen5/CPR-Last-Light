@@ -141,3 +141,12 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - Nathan's revision-1 player projection does **not** establish a Reputation score. Enter the GM-confirmed numeric value; the site does not assume it is zero. An opponent's **GM-supplied** total is optional and shown only for comparison; the viewer does not roll for NPCs.
 - A tie has no effect. Otherwise, the loser may back down or take **−2 on future actions against the winner** until defeating them once. No automatic penalties, fictional time, or Drive writes result from pressing the button.
 - The roll remains in this browser's local, clearable history.
+
+### LUCK tracker and pre-roll allocation (November 2026)
+
+- Nathan's saved current LUCK score is **5** at campaign revision 1. A compact LUCK remaining/max chip appears in the top header on every page. Tap it to open the **Combat → LUCK** panel.
+- The local counter stores points spent in browser localStorage under this campaign and player identity. It persists after reload and does **not** silently refill on a new page visit or a new canonical checkpoint. This tracker is not the authoritative GM state.
+- **Skill Check roll dialogs** offer a LUCK amount (0 to remaining) **before** dice are rolled. Each point gives **+1** to the Check. Successful submission consumes exactly those points and logs the separate LUCK contribution alongside the roll. If the pool is exhausted, no further LUCK can be allocated.
+- Manual **Mark 1 spent** and **Undo 1 spend** controls cover rolls that take place outside the viewer or corrections. **Refill for new session** requires explicit confirmation; neither a reset nor a roll edits Drive or advances fictional time.
+- **Core RED does not exchange LUCK for rerolls**. Repeating a failed Check is adjudicated separately by the GM and not provided as a LUCK ability. LUCK is not allocated to weapon damage, initiative, or Facedown through this interface without an explicit GM ruling.
+- The tracker never assumes that offline-local changes are saved in canonical Drive; share meaningful spent LUCK with the GM when resolving in-game actions. On shared devices, localStorage content may be accessible to other browser users.
