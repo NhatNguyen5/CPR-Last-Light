@@ -4,6 +4,7 @@
  */
 export const LUCK_TRACKER_KEY='cpr-last-light:luck-session-v1'
 export const LUCK_TRACKER_CAMPAIGN='CPR-HELIX-LAST-LIGHT-001'
+export const luckStorageKey=(playerId,campaignId)=>LUCK_TRACKER_KEY+':'+encodeURIComponent(campaignId+'::'+playerId)
 
 export function remainingLuck(max,spent){
  if(!Number.isInteger(max)||max<0||!Number.isInteger(spent)||spent<0)return 0
