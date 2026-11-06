@@ -45,6 +45,7 @@ export function getViewModel(data) {
     baseEmp: pc.base_stats?.EMP,
     skills: Object.entries(pc.skills || {}).sort((a,b)=> a[0].localeCompare(b[0])),
     inventory: personal,
+    companyBenefits: inventory.filter(i => ['exec_company_benefit','exec_company_team_driver_package'].includes(i.acquisition)),
     gear,
     cyberware: personal.filter(i=>cyberwareNames.has(i.id) || /Biomonitor/i.test(i.name)),
     ammo: data.equipment_and_property?.ammo_state || {},

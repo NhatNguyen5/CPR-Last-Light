@@ -12,6 +12,7 @@ import {readCachedPlayerSheet, writeCachedPlayerSheet, clearCachedPlayerSheet} f
 import {buildSkillGroups, SKILL_MAX_LEVEL} from './lib/skillCatalog.js'
 import {readRollLog, writeRollLog, clearRollLog} from './lib/dice.js'
 import {AgentHub, ContactsPage, KnownNpcsPage, ExecPage, CombatPage, RollDialog, RollHistoryDialog} from './features.jsx'
+import {Inventory, Cyberware} from './inventory.jsx'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
 const HELIX_MARK_URL = `${import.meta.env.BASE_URL}helix-mark.svg`
@@ -105,30 +106,6 @@ function Skills({vm,onRoll}) {
     </Panel>
   </div>
 }
-function Inventory({vm}) {
-  const items=vm.inventory.filter(i=>!i.name?.match(/^(Cyberaudio Suite|Internal Agent|Enhanced Antibodies|Chyron|Biomonitor)$/i))
-  return <div className="content-grid">
-    <Panel className="span-8" label="PERSONAL INVENTORY" right={<Tag>{items.length} entries</Tag>}>
-      <div className="items">{items.map(i=><div className="item" key={i.id}><div className="item-icon"><Shield size={19}/></div><div className="item-copy"><strong>{i.name}</strong><span>{fmt(i.custody_or_location,'Location unconfirmed')}</span></div><span className="item-count">×{i.quantity||1}</span></div>)}</div>
-      {!items.length&&<ListEmpty/>}
-      <p className="footnote">Owned is not necessarily carried or currently worn. Unconfirmed starting positions are preserved as unknown.</p>
-    </Panel>
-    <div className="span-4 stacked">
-      <Panel label="PROTECTION"><Details pairs={[["Body armor",`SP ${vm.armorBody}`],["Head armor",`SP ${vm.armorHead}`],["Currently worn",vm.background.condition.armor_currently_worn]]}/></Panel>
-      <Panel label="AMMUNITION"><Details pairs={[["Basic pistol rounds",vm.ammo.pc_vh_pistol_basic_total],["Armor-piercing",vm.ammo.pc_vh_pistol_ap_total],["Magazine loaded",vm.ammo.loaded_magazine]]}/></Panel>
-      <Panel label="FUNDS"><div className="funds"><Wallet size={25}/><span>{vm.credits}<small>eb</small></span></div><p className="footnote">Only confirmed liquid starting cash. No presumed salary or savings.</p></Panel>
-    </div>
-  </div>
-}
-function Cyberware({vm}) {
- const names = ['Cyberaudio Suite','Internal Agent','Enhanced Antibodies','Smart Glasses','Chyron','Biomonitor']
- const owned=vm.inventory.filter(x=>names.some(n=>x.name?.includes(n)))
- return <div className="content-grid">
-   <Panel className="span-8" label="AUGMENTATION RECORD" right={<Tag>PERSONAL</Tag>}><div className="items">{owned.map((i)=><div className="item" key={i.id}><div className="item-icon cyber-icon"><Cpu size={19}/></div><div className="item-copy"><strong>{i.name}</strong><span>{fmt(i.notes)}</span></div><span className="item-count">INSTALLED / OWNED</span></div>)}</div><p className="footnote">Smart Glasses and their Chyron are external. The Biomonitor has no Humanity Loss.</p></Panel>
-   <div className="span-4 stacked"><Panel label="HUMANITY"><div className="hero-numeric">{vm.humanity}<small> / {vm.maxHumanity}</small></div><StatBar value={vm.humanity} max={vm.maxHumanity}/><p className="footnote">Effective EMP {fmt(vm.stats.EMP)} · Natural base EMP {fmt(vm.baseEmp)}.</p></Panel>
-   <Panel label="CYBERWARE LOSS"><Details pairs={Object.entries(vm.background.derived.cyberware_generation_humanity_losses||{}).map(([k,v])=>[k,`−${v} HL`])}/></Panel></div>
- </div>
-}
 function Records({vm}) {
  const b=vm.background
  return <div className="content-grid"><Panel className="span-8" label="LIFEPATH LOG"><div className="record-list"><div><span>ORIGIN</span><p>{fmt(b.original_family_background)}</p></div><div><span>CHILDHOOD</span><p>{fmt(b.childhood_environment)}</p></div><div><span>FAMILY HISTORY</span><p>{fmt(b.family_crisis)}</p></div><div><span>RELATIONSHIP</span><p>{fmt(b.relationship_milestones)}</p></div><div><span>CAREER</span><p>{fmt(b.career_transition)}</p></div><div><span>MOVE TO NIGHT CITY</span><p>{fmt(b.move_to_night_city)}</p></div></div></Panel>
@@ -147,6 +124,7 @@ function App(){
  const [tab,setTab]=useState('overview')
  const [syncOpen,setSyncOpen]=useState(false)
  const [rollRequest,setRollRequest]=useState(null)
+ const [gearDraft,setGearDraft]=useState({})
  const [historyOpen,setHistoryOpen]=useState(false)
  const [rollHistory,setRollHistory]=useState(()=>readRollLog(browserStorage()))
  const [initialCache]=useState(()=>readCachedPlayerSheet(browserStorage(),config.expectedPlayerFileId))
@@ -171,6 +149,7 @@ function App(){
    setBusy(true);setError('')
    try{
      const result=validatePlayerSheet(await fetchDriveJson(id,accessToken))
+     setGearDraft({})
      const fetchedAt=Date.now()
      setSheet(result);setMode('drive');setLastFetched(new Date(fetchedAt));setFileId(id);fileIdRef.current=id
      if(offlineCopyEnabled)writeCachedPlayerSheet(browserStorage(),id,config.expectedPlayerFileId,result,fetchedAt)
@@ -207,14 +186,14 @@ function App(){
  const importLocal=async e=>{
    const f=e.target.files?.[0];if(!f)return
    setError('')
-   try{const result=validatePlayerSheet(JSON.parse(await f.text()));setSheet(result);setMode('local');setLastFetched(new Date())}
+   try{const result=validatePlayerSheet(JSON.parse(await f.text()));setGearDraft({});setSheet(result);setMode('local');setLastFetched(new Date())}
    catch(e){setError(e.message)}
    e.target.value=''
  }
  const signOut=()=>{
    if(tokenRef.current&&window.google?.accounts?.oauth2)window.google.accounts.oauth2.revoke(tokenRef.current,()=>{})
    clearCachedPlayerSheet(browserStorage())
-   tokenRef.current='';setToken('');setSheet(null);setMode('disconnected');setLastFetched(null);setError('')
+   tokenRef.current='';setToken('');setGearDraft({});setSheet(null);setMode('disconnected');setLastFetched(null);setError('')
  }
  const saveLocalRoll=(roll)=>setRollHistory(previous=>{const next=[roll,...previous].slice(0,30);writeRollLog(browserStorage(),next);return next})
  const deleteRollHistory=()=>{clearRollLog(browserStorage());setRollHistory([])}
@@ -242,7 +221,7 @@ function App(){
     {syncOpen&&<><button className="sync-dismiss" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}/><section className="sync-popover" role="dialog" aria-label="Character sync status"><div className="sync-popover-head"><strong>{mode==='cached'?'Offline snapshot':mode==='drive'?'Drive data loaded':mode==='local'?'Local file loaded':'Drive connection'}</strong><button className="icon-button" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}><X size={16}/></button></div><p>{vm?`Revision ${vm.revision} · ${mode==='cached'?'Stored locally; may be outdated.':mode==='drive'?'Loaded from private Drive.':'Not synchronized.'}`:'Sign in to load your private player sheet.'}</p>{lastFetched&&<small>Last download: {lastFetched.toLocaleString()}</small>}{error&&<div className="sync-error">{error}</div>}<button className="btn primary sync-main-action" onClick={()=>{setSyncOpen(false);if(tokenRef.current&&fileId){refresh(fileId)}else connect()}} disabled={!cfgReady||busy}>{busy?'Working…':token?'Refresh from Drive':'Connect & refresh'}<RefreshCcw size={16}/></button>{token&&<button className="sync-menu-link" onClick={()=>{setSyncOpen(false);picker()}}>Select player file with Picker</button>}{vm&&mode!=='local'&&<button className="sync-menu-link" onClick={()=>{removeOfflineCopy();setSyncOpen(false)}}>Remove offline copy</button>}{token&&<button className="sync-menu-link" onClick={()=>{signOut();setSyncOpen(false)}}>Sign out</button>}<p className="sync-warning">Local copy is not guaranteed current. The canonical campaign remains in private Drive.</p></section></>}</div></div></header>
    <main className="main-body"><div className="section-header"><div><div className="overline">CASE FILE / {tab==='overview'?'IDENTITY & CAPABILITIES':(allPageTitles[tab]||tab).toUpperCase()}</div><h1>{vm?(tab==='overview'?vm.name:allPageTitles[tab]):'Executive Dossier'}<span className="header-period">.</span></h1><p>Restricted personnel terminal <span className="header-sep">/</span> {vm?`${tab==='overview'?vm.employer:vm.name} · ${vm.department}`:'Authorized access required'}</p></div><div className="sheet-stamp"><div>{vm?`REVISION ${String(vm.revision).padStart(3,'0')}`:'SECURITY LEVEL 04'}</div><span>{vm?`${formatDate(vm.date)} / ${vm.time}`:'DRIVE AUTH REQUIRED'}</span></div></div>
     {vm&&tab==='overview'&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
-    {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
+    {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} draftAdjustments={gearDraft} onDraftChange={setGearDraft} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
    </main>
    <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
   </div>

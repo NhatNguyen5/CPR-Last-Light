@@ -84,7 +84,7 @@ A full automation can later be added with a privileged Apps Script or other serv
 - The character's private data **never appears in the GitHub repository or GitHub Pages build artifact**. After Drive connection the viewer stores a player-only copy in the visiting browser's localStorage for convenience. Anyone with access to that unlocked browser profile may read it. Remove the offline copy on shared devices. `VITE_*` config is public, but the Drive file remains protected by Google's OAuth access controls.
 - **Do not share the player JSON with “Anyone with the link.”** The viewer is able to read it only after a real account authorizes it.
 - OAuth scope is `https://www.googleapis.com/auth/drive.file`, not unrestricted Drive access. File access is granted with Picker. **This per-file scope technically permits writes to the selected projection; the application itself makes GET requests only.** Never select the canonical file.
-- The viewer does **not** perform writes, roll dice, or change campaign state.
+- The viewer does **not** write to Drive or change campaign state. Dice checks and inventory drafts remain local browser operations.
 - A static-site browser cannot securely hold an OAuth client secret; the GIS token model is used with a public client ID and short-lived access tokens.
 - **Projection contents are visible to any collaborator who can view that Drive file.** The schema excludes `gm_only` at source; the app also rejects full campaign state. The app cannot guarantee every arbitrarily authored field is free of spoilers, so keep the projection generator's allowlist tight.
 - Use `npm test` to verify that GM-only content and hidden inventory do not escape the generator.
@@ -118,3 +118,11 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - All ten current STATs fit in a two-row, five-column grid on mobile (no horizontal scrolling).
 - Core Skills at Level 0 can launch untrained `STAT + 0 + 1d10` checks. Skills whose *type* requires a chosen specialization (e.g. an unrecorded Language or Science discipline) prompt for a descriptive field before rolling. Whether a task requires training, equipment, or GM permission remains a GM ruling. No local roll commits to campaign history.
 - The logo SVG is a **proposed visual emblem** inspired by Helix Meridian's known cybertechnology and medical-technology industry. No official emblem has been established in the canonical campaign state; the site does not establish one as an in-world fact.
+
+### Contacts and inventory interface (November 2026)
+
+- **Contacts** now opens a phone-style personal directory with alphabetized entries, a search bar, and All / Family / Connections tabs. Tapping a person shows only player-recorded information. A phone number is shown as not recorded unless the player projection explicitly contains one; this screen does not place calls or send messages.
+- **Gear** displays eight horizontal, touch-scrollable inventory tabs in the companion-app order: Ammo, Armor, Clothing, Cyberware, Gear, Programs, Vehicles, Weapons. The Cyberware subpage opens the same view with Cyberware selected.
+- Individual item cards summarize **core rulebook data** with linked reference pages, mechanics, saved custody, and saved item notes. Summaries are paraphrased rather than copied wholesale. Where the rulebook has no corresponding entry, the card identifies itself as a saved campaign record rather than guessing.
+- Each personally owned item exposes **− / +** quantity buttons. These change an in-memory *proposal* only, never the verified inventory, loaded magazine, prices, money, HP, Humanity, installation status, or fictional time. The draft can be copied for GM reconciliation or reset. Company-owned assets are clearly marked and do not expose personal quantity controls. Reloading the viewer discards unsaved proposals.
+- The separate `PLAYER_SHEET.json` continues to be the only data source exposed to the website; all item reference descriptions are a static rules catalog that conveys no character possessions on its own.

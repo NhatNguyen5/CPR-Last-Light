@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {
   Activity, BookOpen, BriefcaseBusiness, ChevronRight, Cloud, ContactRound,
-  Cpu, Dices, FileText, HeartPulse, LockKeyhole, MapPin, Search,
+  Cpu, Dices, FileText, HeartPulse, LockKeyhole, MapPin, Search, ChevronLeft, Smartphone, Signal,
   Shield, UserRound, UsersRound, X, CarFront, RotateCcw, Copy, Trash2,
 } from 'lucide-react'
 import {knownPeople,contactPeople} from './lib/people.js'
@@ -59,14 +59,40 @@ function PersonDossier({person,onClose}) {
 }
 export function ContactsPage({vm}) {
  const [query,setQuery]=useState('')
+ const [filter,setFilter]=useState('all')
  const [selected,setSelected]=useState(null)
- const people=useMemo(()=>contactPeople(vm),[vm])
- const groups=[['FAMILY',people.filter(p=>p.kind==='family')],['PERSONAL CONNECTIONS',people.filter(p=>p.kind!=='family')]]
+ const people=useMemo(()=>contactPeople(vm).sort((a,b)=>a.name.localeCompare(b.name)),[vm])
+ const filtered=people.filter(p=>(filter==='all'||(filter==='family'&&p.kind==='family')||(filter==='connections'&&p.kind!=='family'))&&[p.name,p.subtitle,p.work,p.relation,p.role].filter(Boolean).join(' ').toLowerCase().includes(query.toLowerCase()))
+ const groups=[]
+ for(const person of filtered){
+   const letter=person.name.trim().charAt(0).toUpperCase()||'#'
+   if(groups[groups.length-1]?.letter!==letter)groups.push({letter,people:[]})
+   groups[groups.length-1].people.push(person)
+ }
  return <div className="content-grid"><section className="panel span-12">
-   <div className="section-intro"><div><h2>Contacts</h2><p>{people.length} contacts from Nathan's established personal network</p></div><label className="search-field"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search contacts" placeholder="Find a contact"/></label></div>
-   {groups.map(([name,items])=>items.length?<div key={name}><div className="directory-heading">{name} <span>{items.length}</span></div><PersonRows people={items} query={query} onSelect={setSelected}/></div>:null)}
-   <p className="footnote">Directory membership does not mean a person is reachable right now. Christian's current whereabouts and last contact remain unknown.</p>
- </section><PersonDossier person={selected} onClose={()=>setSelected(null)}/></div>
+  <div className="micro-label">AGENT / PRIVATE CONTACTS</div>
+  <div className="phone-stage"><div className="phone-frame">
+   <div className="phone-notice" aria-hidden="true"/>
+   <div className="phone-status"><span><Signal size={12}/> PERSONAL DIRECTORY</span><span>R{vm.revision} · OFFLINE VIEW</span></div>
+   {selected?<>
+     <button className="phone-detail-back" type="button" onClick={()=>setSelected(null)}><ChevronLeft size={17}/> All contacts</button>
+     <div className="phone-detail-head"><div className="phone-detail-avatar"><UserRound size={34}/></div><h2>{selected.name}</h2><p>{roleLabel(selected)} · {human(selected.subtitle)}</p></div>
+     <dl className="phone-detail-fields">
+      <div><dt>Contact number</dt><dd>{selected.phone_number||selected.phone||selected.contact_number||'Not recorded in the verified save'}</dd></div>
+      {contactFields(selected).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{human(value)}</dd></div>)}
+     </dl>
+     <p className="phone-offline"><Smartphone size={13}/> Viewing a player-known record; no call or message has been sent.</p>
+   </>:<>
+     <div className="phone-app-head"><div><strong>Contacts</strong><small>{people.length} saved people</small></div><Smartphone size={28}/></div>
+     <div className="phone-filters" role="group" aria-label="Contact directory filter">{[['all','All'],['family','Family'],['connections','Connections']].map(([key,label])=><button type="button" key={key} className={filter===key?'active':''} onClick={()=>setFilter(key)}>{label}</button>)}</div>
+     <label className="phone-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search contacts" placeholder="Search contacts"/></label>
+     <div className="phone-list">{groups.length?groups.map(group=><div key={group.letter}><div className="phone-letter">{group.letter}</div>{group.people.map(person=><button type="button" key={person.id||person.name} className="phone-person" onClick={()=>setSelected(person)}>
+       <span className="phone-person-avatar"><UserRound size={21}/></span><span className="phone-person-copy"><strong>{person.name}</strong><small>{roleLabel(person)}{person.work?' · '+person.work:''}</small></span><ChevronRight size={17}/>
+     </button>)}</div>):<div className="empty-inline">No contacts match your search.</div>}</div>
+     <p className="phone-offline"><Smartphone size={13}/> This is Nathan's recorded directory. Unrecorded numbers and availability are not invented.</p>
+   </>}
+  </div></div>
+ </section></div>
 }
 export function KnownNpcsPage({vm}) {
  const [query,setQuery]=useState('')
