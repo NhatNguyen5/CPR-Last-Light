@@ -25,6 +25,8 @@ export function getViewModel(data) {
   const cyberwareNames = new Set((pc.cyberware?.installed_on_pc || []).concat(pc.cyberware?.external_smart_glasses_options || []))
   const gear = personal.filter(i => !cyberwareNames.has(i.id))
   return {
+    campaignId: data.canonical_campaign_id,
+    characterId: pc.id,
     name: pc.full_name,
     age: pc.age,
     rank: pc.rank,
