@@ -17,7 +17,7 @@ import {Inventory, Cyberware} from './inventory.jsx'
 import {CharacterMenu} from './CharacterMenu.jsx'
 import {RolePage} from './RolePage.jsx'
 import {readScopedLuck,writeScopedLuck} from './lib/scopedLuck.js'
-import {readProfiles,readActiveProfileKey,setActiveProfileKey,addProfile,readProfileSnapshot,saveProfileSnapshot,readProfileDraft,writeProfileDraft,DEFAULT_PROFILE_KEY} from './lib/profiles.js'
+import {readProfiles,readActiveProfileKey,setActiveProfileKey,addProfile,readProfileSnapshot,saveProfileSnapshot,readProfileDraft,writeProfileDraft,clearProfileSnapshot,DEFAULT_PROFILE_KEY} from './lib/profiles.js'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
 const HELIX_MARK_URL = `${import.meta.env.BASE_URL}helix-mark.svg`
@@ -137,7 +137,7 @@ function App(){
  const [characterMenuOpen,setCharacterMenuOpen]=useState(false)
  const [syncOpen,setSyncOpen]=useState(false)
  const [rollRequest,setRollRequest]=useState(null)
- const [gearDraft,setGearDraft]=useState({})
+ const [gearDraft,setGearDraft]=useState(()=>readProfileDraft(browserStorage(),activeKey))
  const [historyOpen,setHistoryOpen]=useState(false)
  const [spentLuck,setSpentLuck]=useState(0)
  const [luckReady,setLuckReady]=useState(false)
@@ -157,6 +157,8 @@ function App(){
  const tokenRef=useRef('')
  const tokenClientRef=useRef(null)
  const fileIdRef=useRef(fileId)
+ const activeKeyRef=useRef(activeKey)
+ const requestSeqRef=useRef(0)
  const inputRef=useRef(null)
  const cfgReady=Boolean(config.googleClientId && config.pickerApiKey && config.googleProjectNumber)
  const vm=useMemo(()=>getViewModel(sheet),[sheet])
