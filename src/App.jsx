@@ -16,7 +16,7 @@ import {AgentHub, ContactsPage, KnownNpcsPage, CompanyPersonnelPage, ExecPage, C
 import {Inventory, Cyberware} from './inventory.jsx'
 import {CharacterMenu} from './CharacterMenu.jsx'
 import {RolePage} from './RolePage.jsx'
-import {readProfiles} from './lib/profiles.js'
+import {readProfiles,readActiveProfileKey,setActiveProfileKey,addProfile,readProfileSnapshot,saveProfileSnapshot,readProfileDraft,writeProfileDraft,DEFAULT_PROFILE_KEY} from './lib/profiles.js'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
 const HELIX_MARK_URL = `${import.meta.env.BASE_URL}helix-mark.svg`
