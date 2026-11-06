@@ -6,9 +6,9 @@ export function validatePlayerSheet(raw) {
   if ('gm_only' in raw || 'framework_fixed_prepared_truth' in raw || 'prepared_npcs_not_yet_introduced' in raw) {
     throw Error('Refusing GM-only or unfiltered campaign state. Select PLAYER_SHEET.json instead.')
   }
-  if (raw.canonical_campaign_id !== EXPECTED_CAMPAIGN) throw Error('This file is not Nathan Guen’s verified campaign.')
+  if (typeof raw.canonical_campaign_id !== 'string' || !raw.canonical_campaign_id.trim()) throw Error('Missing a stable campaign ID.')
   if (!Number.isInteger(raw.canonical_revision) || raw.canonical_revision < 1) throw Error('The sheet has no valid canonical revision.')
-  if (raw.player_character?.full_name !== 'Nathan Guen') throw Error('The player character identity does not match.')
+  if (typeof raw.player_character?.full_name !== 'string' || !raw.player_character.full_name.trim() || typeof raw.player_character?.id !== 'string' || !raw.player_character.id.trim()) throw Error('Missing character ID or name.')
   if (!raw.player_character?.derived || !raw.player_character?.skills || !raw.equipment_and_property) throw Error('Incomplete player-only projection.')
   // Only known, player-facing views consume properties below; never render arbitrary source JSON.
   return raw
