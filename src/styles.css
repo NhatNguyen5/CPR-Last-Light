@@ -367,3 +367,8 @@
 .personnel-exec-link{margin-top:16px;width:100%}
 @media(max-width:980px){.personnel-layout{grid-template-columns:1fr}.personnel-stat-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-width:760px){.company-personnel-panel{padding:17px}.personnel-intro h2{font-size:24px}.personnel-intro>svg{width:24px}.personnel-dossier{padding:16px}.personnel-profile-head h3{font-size:19px}.personnel-kpis{gap:6px}.personnel-kpis>div{padding:10px 7px}.personnel-kpis strong{font-size:22px}.personnel-kpis span,.personnel-kpis small{font-size:8px}.personnel-assets{grid-template-columns:1fr}.personnel-stat-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+
+/* Facedown is an opposed roll, with locally entered Reputation and GM opposition. */
+.facedown-combat-row .roll-trigger{min-width:105px;font-size:13px}
+.facedown-note{margin:14px 0;padding:11px 12px;border-left:2px solid #bdab77;background:#262822;color:#bcd3c3;font-size:11px;line-height:1.65}
+@media(max-width:760px){.facedown-combat-row .roll-trigger{min-width:92px;font-size:12px}}
