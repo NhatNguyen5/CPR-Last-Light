@@ -23,7 +23,7 @@ export function getViewModel(data) {
   const derived = pc.derived || {}
   const inventory = Array.isArray(data.equipment_and_property?.items) ? data.equipment_and_property.items : []
   const ownId = pc.id
-  const personal = inventory.filter(i => i.owner_id === ownId || i.acquisition === 'starting_fashion_budget')
+  const personal = inventory.filter(i => i && i.visibility !== 'gm-only' && (i.owner_id === ownId || (!i.owner_id && ['starting_fashion_budget','starting_fashion_allowance'].includes(i.acquisition))))
   const cyberwareNames = new Set((pc.cyberware?.installed_on_pc || []).concat(pc.cyberware?.external_smart_glasses_options || []))
   const gear = personal.filter(i => !cyberwareNames.has(i.id))
   return {
