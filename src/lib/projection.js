@@ -3,7 +3,7 @@ export const EXPECTED_CAMPAIGN = 'CPR-HELIX-LAST-LIGHT-001'
 /** Reject the full campaign save and any wrong-campaign/invalid projection. */
 export function validatePlayerSheet(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw Error('Expected a player-sheet JSON object.')
-  if ('gm_only' in raw || 'framework_fixed_prepared_truth' in raw || 'prepared_npcs_not_yet_introduced' in raw) {
+  if (['gm_only','framework_fixed_prepared_truth','prepared_npcs_not_yet_introduced','campaign','checkpoint','world','history','integrity','team','property_and_inventory'].some(key=>Object.hasOwn(raw,key))) {
     throw Error('Refusing GM-only or unfiltered campaign state. Select PLAYER_SHEET.json instead.')
   }
   if (typeof raw.canonical_campaign_id !== 'string' || !raw.canonical_campaign_id.trim()) throw Error('Missing a stable campaign ID.')
