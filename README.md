@@ -150,3 +150,9 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - LUCK does **not** buy rerolls and is not applied to damage or Initiative by default. Facedown is an opposed roll; request a GM ruling on LUCK applicability rather than treating every generic modifier as LUCK.
 - Manual **Mark 1 spent** / **Undo 1 spend** controls track session expenditure; **Refill for new session** requires explicit confirmation. The local counter is scoped to this campaign/player and persists across refreshes/checkpoints without automatic refill. Neither the counter nor dice writes to Drive or advances fictional time.
 - Share meaningful LUCK spending with the GM for canonical reconciliation. LocalStorage data may be accessible to other users of the same browser profile.
+
+### Skills IP and top-bar Reputation (November 2026)
+
+- **Skills** displays a compact read-only **Available Improvement Points** strip before the attribute grid and skill matrix. It reads `player_character.ip` from the private projection; zero is displayed as **0 IP**, while absent/invalid values are shown as unknown rather than silently treated as zero. The current canonical revision has **0 unspent IP**.
+- The sticky header displays **REP** next to LUCK and eurobucks. At revision 1, Nathan's Reputation score has **not been established**, so the badge reads **REP —**, not an invented zero. If a verified Reputation integer is added to the canonical character record, the strict projection generator includes that player-facing field on the next approved checkpoint. No GM-only data is published.
+- Facedown prepopulates Reputation from that field when present; otherwise it requires a confirmed value. The user may still enter a GM-approved situational value. These changes add displays and tests only; no canonical data, IP, reputation, or fictional time is changed by website edits.
