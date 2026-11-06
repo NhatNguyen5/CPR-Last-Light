@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+# Never commit the actual campaign or even the private player projection.
+CAMPAIGN_STATE.json
+PLAYER_SHEET.json
+Nathan_Guen_Player_Sheet.json
+*.recovery*.json
