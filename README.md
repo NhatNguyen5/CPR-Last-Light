@@ -142,11 +142,11 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - A tie has no effect. Otherwise, the loser may back down or take **−2 on future actions against the winner** until defeating them once. No automatic penalties, fictional time, or Drive writes result from pressing the button.
 - The roll remains in this browser's local, clearable history.
 
-### LUCK tracker and pre-roll allocation (November 2026)
+### LUCK tracker and unified roll modifier (November 2026)
 
-- Nathan's saved current LUCK score is **5** at campaign revision 1. A compact LUCK remaining/max chip appears in the top header on every page. Tap it to open the **Combat → LUCK** panel.
-- The local counter stores points spent in browser localStorage under this campaign and player identity. It persists after reload and does **not** silently refill on a new page visit or a new canonical checkpoint. This tracker is not the authoritative GM state.
-- **Skill Check roll dialogs** offer a LUCK amount (0 to remaining) **before** dice are rolled. Each point gives **+1** to the Check. Successful submission consumes exactly those points and logs the separate LUCK contribution alongside the roll. If the pool is exhausted, no further LUCK can be allocated.
-- Manual **Mark 1 spent** and **Undo 1 spend** controls cover rolls that take place outside the viewer or corrections. **Refill for new session** requires explicit confirmation; neither a reset nor a roll edits Drive or advances fictional time.
-- **Core RED does not exchange LUCK for rerolls**. Repeating a failed Check is adjudicated separately by the GM and not provided as a LUCK ability. LUCK is not allocated to weapon damage, initiative, or Facedown through this interface without an explicit GM ruling.
-- The tracker never assumes that offline-local changes are saved in canonical Drive; share meaningful spent LUCK with the GM when resolving in-game actions. On shared devices, localStorage content may be accessible to other browser users.
+- Nathan's saved LUCK is **5** at campaign revision 1. The remaining/max LUCK chip is visible in the top header; tap it to open **Combat → LUCK**.
+- The **Modifier** field is shared by all dice dialogs (Skills and Combat, including Facedown, Initiative, and damage). It does **not** require a separate LUCK field. All valid modifiers, positive or negative, enter through this single input.
+- **LUCK can be committed before a Skill Check for +1 per point**. This includes combat Skill Checks such as Handgun, Evasion, and Brawling. Example: commit 2 LUCK, type +2 in Modifier (combined with any other situational modifiers), and click Roll. A generic Modifier cannot identify which portion came from LUCK, so the viewer does **not** automatically deduct LUCK; mark 2 points spent in the LUCK tracker before rolling.
+- LUCK does **not** buy rerolls and is not applied to damage or Initiative by default. Facedown is an opposed roll; request a GM ruling on LUCK applicability rather than treating every generic modifier as LUCK.
+- Manual **Mark 1 spent** / **Undo 1 spend** controls track session expenditure; **Refill for new session** requires explicit confirmation. The local counter is scoped to this campaign/player and persists across refreshes/checkpoints without automatic refill. Neither the counter nor dice writes to Drive or advances fictional time.
+- Share meaningful LUCK spending with the GM for canonical reconciliation. LocalStorage data may be accessible to other users of the same browser profile.
