@@ -3,7 +3,7 @@ import {
   Activity, ArrowDownToLine, ArrowRight, BriefcaseBusiness, CheckCircle2, ChevronRight,
   CircleHelp, Cloud, CloudOff, Cpu, ExternalLink, FileJson2, Fingerprint, HeartPulse,
   Home, IdCard, Layers3, LockKeyhole, LogOut, Radar, RefreshCcw, Search,
-  Shield, ShieldCheck, Terminal, UserRound, UsersRound, Wallet, X, Zap, Dices, ArrowLeft,
+  Shield, ShieldCheck, Terminal, UserRound, UsersRound, Wallet, X, Zap, Dices, ArrowLeft, Clover,
 } from 'lucide-react'
 import {config} from './config.js'
 import {fetchDriveJson, initTokenClient, loadGoogleSdk, openGooglePicker} from './lib/drive.js'
@@ -11,6 +11,7 @@ import {getViewModel, validatePlayerSheet} from './lib/projection.js'
 import {readCachedPlayerSheet, writeCachedPlayerSheet, clearCachedPlayerSheet} from './lib/cache.js'
 import {buildSkillGroups, SKILL_MAX_LEVEL} from './lib/skillCatalog.js'
 import {readRollLog, writeRollLog, clearRollLog} from './lib/dice.js'
+import {readLuckSpent,writeLuckSpent,changeLuckSpent,remainingLuck} from './lib/luck.js'
 import {AgentHub, ContactsPage, KnownNpcsPage, CompanyPersonnelPage, ExecPage, CombatPage, RollDialog, RollHistoryDialog} from './features.jsx'
 import {Inventory, Cyberware} from './inventory.jsx'
 
@@ -126,6 +127,9 @@ function App(){
  const [rollRequest,setRollRequest]=useState(null)
  const [gearDraft,setGearDraft]=useState({})
  const [historyOpen,setHistoryOpen]=useState(false)
+ const [spentLuck,setSpentLuck]=useState(0)
+ const [luckReady,setLuckReady]=useState(false)
+ const spentLuckRef=useRef(0)
  const [rollHistory,setRollHistory]=useState(()=>readRollLog(browserStorage()))
  const [initialCache]=useState(()=>readCachedPlayerSheet(browserStorage(),config.expectedPlayerFileId))
  const [sheet,setSheet]=useState(initialCache?.sheet??null)
@@ -144,6 +148,29 @@ function App(){
  const inputRef=useRef(null)
  const cfgReady=Boolean(config.googleClientId && config.pickerApiKey && config.googleProjectNumber)
  const vm=useMemo(()=>getViewModel(sheet),[sheet])
+ const luckMax=Number.isInteger(vm?.stats?.LUCK)&&vm.stats.LUCK>=0?vm.stats.LUCK:0
+ const luckPlayerId=vm?.background?.id||''
+ useEffect(()=>{
+  if(!luckPlayerId){spentLuckRef.current=0;setSpentLuck(0);setLuckReady(false);return}
+  const value=readLuckSpent(browserStorage(),luckPlayerId,luckMax)
+  spentLuckRef.current=value;setSpentLuck(value);setLuckReady(true)
+ },[luckPlayerId,luckMax])
+ const luckRemaining=luckReady?remainingLuck(luckMax,spentLuck):0
+ const adjustLuck=useCallback(delta=>{
+  if(!luckReady||!luckPlayerId)return false
+  const next=changeLuckSpent(spentLuckRef.current,delta,luckMax)
+  if(next===null)return false
+  spentLuckRef.current=next
+  setSpentLuck(next)
+  writeLuckSpent(browserStorage(),luckPlayerId,next,luckMax)
+  return true
+ },[luckReady,luckPlayerId,luckMax])
+ const resetLuck=()=>{
+  if(!luckReady||!luckPlayerId)return
+  if(window.confirm('Refill the local LUCK pool for the start of a new game session? This does not edit Drive or advance fictional time.')){
+   adjustLuck(-spentLuckRef.current)
+  }
+ }
  const refresh=useCallback(async(id,accessToken=tokenRef.current)=>{
    if(!accessToken){setError('Sign in to Google first.');return false}
    setBusy(true);setError('')
@@ -217,16 +244,16 @@ function App(){
   </aside>
   <div className="main-region">
    <header className="topbar"><div className="top-left"><div className="topbar-brand"><Logo/><span className="topbar-brand-name">HELIX <b>MERIDIAN</b></span></div>{agentSubs.has(tab)&&<button className="icon-button subpage-back" title="Back to Agent" aria-label="Back to Agent" onClick={()=>goToPage('agent')}><ArrowLeft size={18}/></button>}<span className="breadcrumb">SYSTEM <ChevronRight size={12}/> PERSONNEL <ChevronRight size={12}/><b>{allPageTitles[tab]?.toUpperCase()||'OVERVIEW'}</b></span></div>
-    <div className="top-actions">{vm&&<div className="wallet-chip" aria-label={`Nathan's saved liquid balance: ${vm.credits} eurobucks`} title={`Saved balance, revision ${vm.revision}; not a live financial account`}><Wallet size={15}/><strong>€$ {Number(vm.credits).toLocaleString()}</strong></div>}<div className="sync-anchor"><button className={'sync-toggle icon-button '+(mode==='cached'?'sync-is-cached':mode==='drive'?'sync-is-drive':'')} title="Drive sync and offline settings" aria-label={mode==='cached'?'Offline snapshot: open sync controls':mode==='drive'?'Drive data loaded: open sync controls':'Open Drive connection settings'} aria-expanded={syncOpen} onClick={()=>setSyncOpen(v=>!v)}>{mode==='cached'?<CloudOff size={19}/>:<Cloud size={19}/>}<i className="sync-indicator"/></button>
+    <div className="top-actions">{vm&&<button type="button" className="luck-chip" disabled={!luckReady} aria-label={`LUCK: ${luckRemaining} of ${luckMax} remaining. Open Combat Luck tracker.`} title="LUCK remaining this session · click to view tracker" onClick={()=>goToPage('combat')}><Clover size={15}/><span>LUCK</span><strong>{luckReady?`${luckRemaining}/${luckMax}`:'—'}</strong></button>}{vm&&<div className="wallet-chip" aria-label={`Nathan's saved liquid balance: ${vm.credits} eurobucks`} title={`Saved balance, revision ${vm.revision}; not a live financial account`}><Wallet size={15}/><strong>€$ {Number(vm.credits).toLocaleString()}</strong></div>}<div className="sync-anchor"><button className={'sync-toggle icon-button '+(mode==='cached'?'sync-is-cached':mode==='drive'?'sync-is-drive':'')} title="Drive sync and offline settings" aria-label={mode==='cached'?'Offline snapshot: open sync controls':mode==='drive'?'Drive data loaded: open sync controls':'Open Drive connection settings'} aria-expanded={syncOpen} onClick={()=>setSyncOpen(v=>!v)}>{mode==='cached'?<CloudOff size={19}/>:<Cloud size={19}/>}<i className="sync-indicator"/></button>
     {syncOpen&&<><button className="sync-dismiss" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}/><section className="sync-popover" role="dialog" aria-label="Character sync status"><div className="sync-popover-head"><strong>{mode==='cached'?'Offline snapshot':mode==='drive'?'Drive data loaded':mode==='local'?'Local file loaded':'Drive connection'}</strong><button className="icon-button" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}><X size={16}/></button></div><p>{vm?`Revision ${vm.revision} · ${mode==='cached'?'Stored locally; may be outdated.':mode==='drive'?'Loaded from private Drive.':'Not synchronized.'}`:'Sign in to load your private player sheet.'}</p>{lastFetched&&<small>Last download: {lastFetched.toLocaleString()}</small>}{error&&<div className="sync-error">{error}</div>}<button className="btn primary sync-main-action" onClick={()=>{setSyncOpen(false);if(tokenRef.current&&fileId){refresh(fileId)}else connect()}} disabled={!cfgReady||busy}>{busy?'Working…':token?'Refresh from Drive':'Connect & refresh'}<RefreshCcw size={16}/></button>{token&&<button className="sync-menu-link" onClick={()=>{setSyncOpen(false);picker()}}>Select player file with Picker</button>}{vm&&mode!=='local'&&<button className="sync-menu-link" onClick={()=>{removeOfflineCopy();setSyncOpen(false)}}>Remove offline copy</button>}{token&&<button className="sync-menu-link" onClick={()=>{signOut();setSyncOpen(false)}}>Sign out</button>}<p className="sync-warning">Local copy is not guaranteed current. The canonical campaign remains in private Drive.</p></section></>}</div></div></header>
    <main className="main-body"><div className="section-header"><div><div className="overline">CASE FILE / {tab==='overview'?'IDENTITY & CAPABILITIES':(allPageTitles[tab]||tab).toUpperCase()}</div><h1>{vm?(tab==='overview'?vm.name:allPageTitles[tab]):'Executive Dossier'}<span className="header-period">.</span></h1><p>Restricted personnel terminal <span className="header-sep">/</span> {vm?`${tab==='overview'?vm.employer:vm.name} · ${vm.department}`:'Authorized access required'}</p></div><div className="sheet-stamp"><div>{vm?`REVISION ${String(vm.revision).padStart(3,'0')}`:'SECURITY LEVEL 04'}</div><span>{vm?`${formatDate(vm.date)} / ${vm.time}`:'DRIVE AUTH REQUIRED'}</span></div></div>
     {vm&&tab==='overview'&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
-    {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} draftAdjustments={gearDraft} onDraftChange={setGearDraft} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
+    {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} draftAdjustments={gearDraft} onDraftChange={setGearDraft} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)} luckMax={luckMax} luckRemaining={luckRemaining} luckReady={luckReady} onLuckSpend={()=>adjustLuck(1)} onLuckUndo={()=>adjustLuck(-1)} onLuckReset={resetLuck}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
    </main>
    <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Main character pages">{nav.map(([id,label,Icon])=><button key={id} className={activeTab===id?'is-active':''} aria-current={activeTab===id?'page':undefined} onClick={()=>goToPage(id)}><Icon size={20} strokeWidth={2}/><span>{label}</span></button>)}</nav>
-  <RollDialog request={rollRequest} onClose={()=>setRollRequest(null)} onSave={saveLocalRoll}/>
+  <RollDialog request={rollRequest} onClose={()=>setRollRequest(null)} onSave={saveLocalRoll} luckRemaining={luckRemaining} onSpendLuck={adjustLuck} luckReady={luckReady}/>
   {historyOpen&&<RollHistoryDialog history={rollHistory} onClose={()=>setHistoryOpen(false)} onClear={deleteRollHistory}/>}
   <input ref={inputRef} type="file" accept=".json,application/json" hidden onChange={importLocal}/>
  </div>
