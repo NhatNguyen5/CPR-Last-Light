@@ -68,5 +68,6 @@ export function describeRoll(roll) {
   }
   if(roll.kind==='damage')return `${roll.label}: ${roll.dice.join(' + ')}${roll.modifier?` ${roll.modifier<0?'-':'+'} ${Math.abs(roll.modifier)}`:''} = ${roll.total}. Local reference roll ${date}; not committed to campaign.`
   const followup=roll.second!==null?` ${roll.critical==='success'?'+':'-'} ${roll.second} (critical ${roll.critical})`:''
-  return `${roll.label}: ${roll.base} base ${roll.modifier<0?'-':'+'} ${Math.abs(roll.modifier)} modifier + ${roll.first}${followup} = ${roll.total}${Number.isFinite(roll.dv)?` vs DV ${roll.dv}`:''}. Local reference roll ${date}; not committed to campaign.`
+  const modifierText=Number.isInteger(roll.situationalModifier)?`${roll.situationalModifier} situational + ${roll.luckSpent||0} pre-roll LUCK`:`${roll.modifier<0?'-':'+'} ${Math.abs(roll.modifier)} modifier`
+  return `${roll.label}: ${roll.base} base + ${modifierText} + ${roll.first}${followup} = ${roll.total}${Number.isFinite(roll.dv)?` vs DV ${roll.dv}`:''}. Local reference roll ${date}; not committed to campaign.`
 }
