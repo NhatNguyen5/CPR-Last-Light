@@ -22,10 +22,10 @@ export function AgentHub({vm,onNavigate}) {
  const entries=[
   {id:'contacts',label:'Contacts',sub:'Personal directory',Icon:ContactRound,number:contactPeople(vm).length},
   {id:'npcs',label:'Known NPCs',sub:'Player-known dossiers',Icon:UsersRound,number:knownPeople(vm).length},
-  {id:'personnel',label:'Company Personnel',sub:'Assigned Helix staff',Icon:IdCard,number:getCompanyPersonnel(vm).length},
+  {id:'personnel',label:'Company Personnel',sub:'Assigned personnel',Icon:IdCard,number:getCompanyPersonnel(vm).length},
   {id:'records',label:'Records',sub:'History and journal',Icon:BookOpen},
   {id:'cyberware',label:'Cyberware',sub:'Augmentation record',Icon:Cpu},
-  {id:'exec',label:'Teamwork',sub:'Exec resources',Icon:BriefcaseBusiness},
+  {id:'exec',label:vm.role==='Exec'?'Teamwork':(vm.role||'Role'),sub:'Role ability details',Icon:BriefcaseBusiness},
   {id:'combat',label:'Roller',sub:'Checks and combat',Icon:Dices},
  ]
  return <div className="content-grid">
@@ -33,7 +33,7 @@ export function AgentHub({vm,onNavigate}) {
    <div className="micro-label">PERSONAL AGENT // PLAYER-KNOWN DATA</div>
    <h2 className="agent-hub-title">Your field directory</h2>
    <p className="subtle smaller">Open a dossier, inspect the current save, or prepare a roll. This terminal never reveals unrevealed GM information.</p>
-   <div className="agent-hub-grid">{entries.map(({id,label,sub,Icon,number})=><button key={id} className="agent-hub-tile" onClick={()=>onNavigate(id)}>
+   <div className="agent-hub-grid">{entries.filter(e=>e.id!=='personnel'||getCompanyPersonnel(vm).length>0).map(({id,label,sub,Icon,number})=><button key={id} className="agent-hub-tile" onClick={()=>onNavigate(id)}>
     <Icon size={30} strokeWidth={1.65}/><strong>{label}</strong><small>{sub}</small>{number!==undefined&&<span className="hub-count">{number}</span>}
    </button>)}</div>
   </section>
@@ -103,10 +103,10 @@ export function KnownNpcsPage({vm}) {
  const people=useMemo(()=>knownPeople(vm),[vm])
  const filtered=people.filter(p=>filter==='all'||p.kind===filter)
  return <div className="content-grid"><section className="panel span-12">
-  <div className="section-intro"><div><h2>Known NPCs</h2><p>{people.length} people established in Nathan's personal history or encountered during play</p></div><label className="search-field"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search known NPCs" placeholder="Search names and details"/></label></div>
+  <div className="section-intro"><div><h2>Known NPCs</h2><p>{people.length} people established in this character's personal history or encountered during play</p></div><label className="search-field"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search known NPCs" placeholder="Search names and details"/></label></div>
   <div className="npc-filters" role="group" aria-label="Filter NPCs">{[['all','All'],['family','Family'],['friend','Connections'],['npc','Others']].map(([id,label])=><button key={id} className={filter===id?'active':''} onClick={()=>setFilter(id)}>{label}</button>)}</div>
   <PersonRows people={filtered} query={query} onSelect={setSelected}/>
-  <p className="footnote">This index excludes unrevealed people from the GM's preparations. The company driver is an assigned employee, but their identity remains unestablished until introduced.</p>
+  <p className="footnote">This index excludes unrevealed people from the GM's preparations. Assigned employees not yet introduced in this character's story remain separate from Known NPCs.</p>
  </section><PersonDossier person={selected} onClose={()=>setSelected(null)}/></div>
 }
 /** Assigned staff are distinct from Known NPCs until introduced on-screen. */
