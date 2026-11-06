@@ -273,16 +273,32 @@ function App(){
    }catch(e){setError(e.message)}
  }
  const importLocal=async e=>{
-   const f=e.target.files?.[0];if(!f)return
-   setError('')
-   try{const result=validatePlayerSheet(JSON.parse(await f.text()));setGearDraft({});setSheet(result);setMode('local');setLastFetched(new Date())}
-   catch(e){setError(e.message)}
-   e.target.value=''
+  const selected=e.target.files?.[0];if(!selected)return
+  setError('')
+  try{
+   if(selected.size>2000000)throw Error('Projection is too large to import safely.')
+   const result=validatePlayerSheet(JSON.parse(await selected.text()))
+   const profile=addProfile(browserStorage(),result,{source:'local'})
+   const timestamp=Date.now()
+   saveProfileSnapshot(browserStorage(),profile,result,timestamp)
+   activeKeyRef.current=profile.key;requestSeqRef.current+=1
+   setProfiles(readProfiles(browserStorage()))
+   setActiveProfileKey(browserStorage(),profile.key);setActiveKey(profile.key)
+   setGearDraft(readProfileDraft(browserStorage(),profile.key))
+   setRollHistory(readRollLog(browserStorage(),rollScopeFor(profile.key)))
+   setSheet(result);setMode('local');setLastFetched(new Date(timestamp))
+   fileIdRef.current=profile.fileId||'';setFileId(profile.fileId||'')
+   setTab('overview');setHistoryOpen(false);setRollRequest(null);setSyncOpen(false)
+  }catch(error){setError(error?.message||String(error))}
+  e.target.value=''
  }
  const signOut=()=>{
-   if(tokenRef.current&&window.google?.accounts?.oauth2)window.google.accounts.oauth2.revoke(tokenRef.current,()=>{})
-   clearCachedPlayerSheet(browserStorage())
-   tokenRef.current='';setToken('');setGearDraft({});setSheet(null);setMode('disconnected');setLastFetched(null);setError('')
+  if(tokenRef.current&&window.google?.accounts?.oauth2)window.google.accounts.oauth2.revoke(tokenRef.current,()=>{})
+  tokenRef.current='';setToken('')
+  clearProfileSnapshot(browserStorage(),activeKeyRef.current)
+  if(activeKeyRef.current===DEFAULT_PROFILE_KEY)clearCachedPlayerSheet(browserStorage())
+  requestSeqRef.current+=1;setBusy(false)
+  setSheet(null);setMode('disconnected');setLastFetched(null);setError('')
  }
  const rollScope=activeKey===DEFAULT_PROFILE_KEY?'':activeKey
  const saveLocalRoll=(roll)=>setRollHistory(previous=>{const next=[roll,...previous].slice(0,30);writeRollLog(browserStorage(),next,rollScope);return next})
