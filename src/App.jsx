@@ -129,6 +129,9 @@ function EmptyState({onConnect, onSelectLocal,loading,configured,error,hasToken,
  <div className="empty-foot"><ShieldCheck size={14}/>Drive scope: file-by-file · No secrets in this site · No write operations</div></div>
 }
 function App(){
+ const [profiles,setProfiles]=useState(()=>readProfiles(browserStorage()))
+ const [activeKey,setActiveKey]=useState(()=>readActiveProfileKey(browserStorage()))
+ const activeProfile=profiles.find(p=>p.key===activeKey)||profiles[0]
  const [tab,setTab]=useState('overview')
  const [characterMenuOpen,setCharacterMenuOpen]=useState(false)
  const [syncOpen,setSyncOpen]=useState(false)
