@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import {knownPeople,contactPeople} from './lib/people.js'
 import {getCompanyPersonnel} from './lib/companyPersonnel.js'
-import {rollRedCheck,rollInitiative,rollDamage,describeRoll} from './lib/dice.js'
+import {rollRedCheck,rollInitiative,rollFacedown,rollDamage,describeRoll} from './lib/dice.js'
 
 const human=v => v===undefined||v===null||v===''?'Not recorded':String(v)
 const unknown=v=>!v||/^(unknown|unestablished|undetermined|not yet)/i.test(String(v))
