@@ -127,6 +127,7 @@ function EmptyState({onConnect, onSelectLocal,loading,configured,error,hasToken,
 }
 function App(){
  const [tab,setTab]=useState('overview')
+ const [characterMenuOpen,setCharacterMenuOpen]=useState(false)
  const [syncOpen,setSyncOpen]=useState(false)
  const [rollRequest,setRollRequest]=useState(null)
  const [gearDraft,setGearDraft]=useState({})
