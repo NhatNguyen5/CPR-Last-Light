@@ -411,3 +411,19 @@
 .skill-ip-banner>strong small{font:600 11px 'IBM Plex Mono',monospace;color:#b5af84}
 @media(max-width:760px){.rep-chip{min-height:37px;padding:0 8px;gap:4px}.rep-chip span{font-size:9px}.rep-chip strong{font-size:12px}.skill-ip-banner{padding:10px 13px;gap:8px}.skill-ip-intro>span{font-size:9px}.skill-ip-intro>small{font-size:9px}.skill-ip-banner>strong{font-size:25px}}
 @media(max-width:390px){.topbar-brand-name{display:none!important}.rep-chip{padding:0 6px}.topbar-brand .helix-logo{width:33px;height:33px}.top-left{gap:3px!important}}
+
+/* Character library: available on every page, compact enough for mobile. */
+.character-selector{position:relative;z-index:32;flex:0 0 auto}
+.character-selector>button{min-height:35px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;background:#14271f;color:#d6e5d9;border:1px solid #3e6352;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.character-selector>button:hover,.character-selector>button[aria-expanded=true]{border-color:#98b7a8;background:#21382d}
+.character-menu{position:absolute;left:0;top:calc(100% + 8px);width:min(375px,calc(100vw - 16px));z-index:90;background:#101e1a;border:1px solid #557467;box-shadow:0 16px 48px #000b;padding:12px;display:grid;gap:8px;max-height:min(65vh,550px);overflow:auto}
+.character-menu>button{width:100%;text-align:left;border:1px solid #334a40;background:#182721;color:#e2ece6;padding:12px;font-family:inherit;cursor:pointer;font-size:12px}
+.character-menu>button:hover,.character-menu>button[aria-current=true]{border-color:#a1bba9;background:#2a4034;color:#fff}
+.character-menu>button[aria-current=true]:before{content:'● ';color:#b6daa9}
+@media(max-width:760px){
+ .character-selector>button{font-size:0;min-height:35px;width:32px;padding:0;overflow:hidden}
+ .character-selector>button:before{content:'⇄';font-size:20px;line-height:1}
+ .character-menu{position:fixed;top:58px;left:8px;right:8px;width:auto}
+ .top-left{gap:5px!important;min-width:0}
+}
+@media(max-width:390px){.topbar-brand-name{display:none!important}.character-selector>button{width:30px}}
