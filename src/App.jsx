@@ -254,20 +254,21 @@ function App(){
        if(cancelled)return
        if(response.error||!response.access_token){setError(`Google authorization requires attention: ${response.error||'no access token'}. Tap Connect again to grant access if needed.`);setNeedsConsent(true);setBusy(false);return}
        tokenRef.current=response.access_token;setToken(response.access_token);setNeedsConsent(false);setBusy(false)
-       if(fileIdRef.current)await refresh(fileIdRef.current,response.access_token)
+       const current=readProfiles(browserStorage()).find(p=>p.key===activeKeyRef.current)
+       if(current?.source==='drive'&&current.fileId)await refresh(current.fileId,response.access_token,{expectedKey:current.key})
      })
      tokenClientRef.current=client;setSdkReady(true)
    }).catch(e=>{if(!cancelled)setError(e.message)})
    return ()=>{cancelled=true}
  },[cfgReady,refresh])
  const connect=()=>{setError('');if(!sdkReady){setError('Google SDK is not ready yet.');return}setBusy(true);tokenClientRef.current?.requestAccessToken({prompt:needsConsent?'consent':''})}
- const removeOfflineCopy=()=>{clearCachedPlayerSheet(browserStorage());setOfflineCopyEnabled(false);if(mode==='cached'){setSheet(null);setMode('disconnected');setLastFetched(null)}}
+ const removeOfflineCopy=()=>{clearProfileSnapshot(browserStorage(),activeKeyRef.current);if(activeKeyRef.current===DEFAULT_PROFILE_KEY)clearCachedPlayerSheet(browserStorage());setOfflineCopyEnabled(false);if(mode==='cached'){setSheet(null);setMode('disconnected');setLastFetched(null)}}
  const picker=()=>{
    try{
      if(!tokenRef.current){setError('Sign in to Google before selecting a file.');return}
      openGooglePicker({token:tokenRef.current,apiKey:config.pickerApiKey,projectNumber:config.googleProjectNumber,onFileSelected:({id,name})=>{
-       if(name&&name!=='PLAYER_SHEET.json'){setError('Select PLAYER_SHEET.json only. The canonical save contains private GM-only information.');return}
-       refresh(id)
+       if(name&&(!name.toLowerCase().endsWith('.json')||/campaign_state/i.test(name))){setError('Choose a player-only JSON projection, never CAMPAIGN_STATE.json.');return}
+       refresh(id,tokenRef.current,{allowNew:true})
      }})
    }catch(e){setError(e.message)}
  }
@@ -285,7 +286,7 @@ function App(){
  }
  const rollScope=activeKey===DEFAULT_PROFILE_KEY?'':activeKey
  const saveLocalRoll=(roll)=>setRollHistory(previous=>{const next=[roll,...previous].slice(0,30);writeRollLog(browserStorage(),next,rollScope);return next})
- const deleteRollHistory=()=>{clearRollLog(browserStorage());setRollHistory([])}
+ const deleteRollHistory=()=>{clearRollLog(browserStorage(),rollScope);setRollHistory([])}
  const goToPage=(id)=>{setTab(id);setSyncOpen(false);window.scrollTo?.({top:0,behavior:'instant'})}
  useEffect(()=>{
    if(!rollRequest&&!historyOpen&&!syncOpen)return
@@ -310,7 +311,7 @@ function App(){
     {syncOpen&&<><button className="sync-dismiss" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}/><section className="sync-popover" role="dialog" aria-label="Character sync status"><div className="sync-popover-head"><strong>{mode==='cached'?'Offline snapshot':mode==='drive'?'Drive data loaded':mode==='local'?'Local file loaded':'Drive connection'}</strong><button className="icon-button" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}><X size={16}/></button></div><p>{vm?`Revision ${vm.revision} · ${mode==='cached'?'Stored locally; may be outdated.':mode==='drive'?'Loaded from private Drive.':'Not synchronized.'}`:'Sign in to load your private player sheet.'}</p>{lastFetched&&<small>Last download: {lastFetched.toLocaleString()}</small>}{error&&<div className="sync-error">{error}</div>}<button className="btn primary sync-main-action" onClick={()=>{setSyncOpen(false);if(tokenRef.current&&fileId){refresh(fileId)}else connect()}} disabled={!cfgReady||busy}>{busy?'Working…':token?'Refresh from Drive':'Connect & refresh'}<RefreshCcw size={16}/></button>{token&&<button className="sync-menu-link" onClick={()=>{setSyncOpen(false);picker()}}>Select player file with Picker</button>}{vm&&mode!=='local'&&<button className="sync-menu-link" onClick={()=>{removeOfflineCopy();setSyncOpen(false)}}>Remove offline copy</button>}{token&&<button className="sync-menu-link" onClick={()=>{signOut();setSyncOpen(false)}}>Sign out</button>}<p className="sync-warning">Local copy is not guaranteed current. The canonical campaign remains in private Drive.</p></section></>}</div></div></header>
    <main className="main-body"><div className="section-header"><div><div className="overline">CASE FILE / {tab==='overview'?'IDENTITY & CAPABILITIES':(allPageTitles[tab]||tab).toUpperCase()}</div><h1>{vm?(tab==='overview'?vm.name:allPageTitles[tab]):'Executive Dossier'}<span className="header-period">.</span></h1><p>Restricted personnel terminal <span className="header-sep">/</span> {vm?`${tab==='overview'?vm.employer:vm.name} · ${vm.department}`:'Authorized access required'}</p></div><div className="sheet-stamp"><div>{vm?`REVISION ${String(vm.revision).padStart(3,'0')}`:'SECURITY LEVEL 04'}</div><span>{vm?`${formatDate(vm.date)} / ${vm.time}`:'DRIVE AUTH REQUIRED'}</span></div></div>
     {vm&&tab==='overview'&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
-    {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} draftAdjustments={gearDraft} onDraftChange={setGearDraft} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)} luckMax={luckMax} luckRemaining={luckRemaining} luckReady={luckReady} onLuckSpend={()=>adjustLuck(1)} onLuckUndo={()=>adjustLuck(-1)} onLuckReset={resetLuck}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
+    {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} draftAdjustments={gearDraft} onDraftChange={updateGearDraft} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)} luckMax={luckMax} luckRemaining={luckRemaining} luckReady={luckReady} onLuckSpend={()=>adjustLuck(1)} onLuckUndo={()=>adjustLuck(-1)} onLuckReset={resetLuck}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
    </main>
    <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
   </div>
