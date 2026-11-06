@@ -7,7 +7,8 @@ import {
 } from 'lucide-react'
 import {config} from './config.js'
 import {fetchDriveJson, initTokenClient, loadGoogleSdk, openGooglePicker} from './lib/drive.js'
-import {getViewModel, groupSkills, validatePlayerSheet} from './lib/projection.js'
+import {getViewModel, validatePlayerSheet} from './lib/projection.js'
+import {buildSkillGroups, SKILL_MAX_LEVEL} from './lib/skillCatalog.js'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
 const nav = [
@@ -56,15 +57,43 @@ function Overview({vm}) {
     </Panel>
   </div>
 }
+function SkillBar({level}) {
+  return <div className="skill-tenbar" aria-label={`Rank ${level} of ${SKILL_MAX_LEVEL}`}>
+    {Array.from({length:SKILL_MAX_LEVEL},(_,i)=><i key={i} className={i<level?'active':''}/>)}
+  </div>
+}
 function Skills({vm}) {
   const [search,setSearch]=useState('')
-  const skills=groupSkills(vm.skills,search)
+  const [showUntrained,setShowUntrained]=useState(true)
+  const learned=useMemo(()=>Object.fromEntries(vm.skills),[vm.skills])
+  const groups=useMemo(()=>buildSkillGroups(learned,vm.stats,{search,trainedOnly:!showUntrained}),[learned,vm.stats,search,showUntrained])
+  const shown=groups.reduce((count,g)=>count+g.rows.length,0)
   return <div className="content-grid">
-    <Panel className="span-12" label="SKILL MATRIX" right={<Tag>{vm.skills.length} skills</Tag>}>
-      <div className="section-intro"><div><h2>Capabilities</h2><p>Rank values reflect the last verified campaign checkpoint.</p></div><label className="search-field"><Search size={16}/><input type="search" placeholder="Search skills..." aria-label="Search skills" value={search} onChange={e=>setSearch(e.target.value)}/></label></div>
-      <div className="skill-grid">{skills.map(([name,rank])=><div className="skill-row" key={name}><span>{name}</span><div className="skill-right"><div className="small-meter">{Array.from({length:8},(_,i)=><i key={i} className={i<rank?'active':''}/>)}</div><strong>{rank}</strong></div></div>)}</div>
-      {!skills.length&&<ListEmpty text="No skills match that search."/>}
-      <p className="footnote">Skill checks generally combine STAT + Skill + 1d10 and modifiers. The sheet displays Skill ranks; it does not roll dice or alter your character.</p>
+    <Panel className="span-12 skill-matrix-panel" label="SKILL MATRIX // CYBERPUNK RED" right={<Tag>{vm.skills.length} trained specializations</Tag>}>
+      <div className="section-intro">
+        <div><h2>Capabilities</h2><p>Nine core categories · Level / STAT / Base · Saved revision {vm.revision}</p></div>
+        <label className="search-field"><Search size={16}/><input type="search" placeholder="Search skill or category..." aria-label="Search skills" value={search} onChange={e=>setSearch(e.target.value)}/></label>
+      </div>
+      <div className="skills-toolbar">
+        <span>{shown} skill rows · Normal maximum Level {SKILL_MAX_LEVEL}</span>
+        <button type="button" className={'skill-mode-button'+(showUntrained?' active':'')} aria-pressed={showUntrained} onClick={()=>setShowUntrained(v=>!v)}>
+          {showUntrained?'Showing all core Skills':'Showing trained Skills only'}
+        </button>
+      </div>
+      <div className="skill-category-grid">
+        {groups.map(group=><section className="skill-category" key={group.name} aria-label={group.name}>
+          <div className="skill-category-heading"><h3>{group.name}</h3><span>{group.trainedCount} TRAINED</span></div>
+          <div className="skill-table-columns" aria-hidden="true"><span>SKILL</span><span>LEVEL</span><span>STAT</span><span>BASE</span></div>
+          {group.rows.map(row=><div className={'skill-table-row'+(row.trained?'':' untrained')+(row.parent?' specialized':'')} key={row.name}>
+            <div className="skill-table-name" title={row.name}>{row.parent&&<small>{row.parent}</small>}<span>{row.label}</span>{row.doubleCost&&<em title="Costs twice as many improvement points">×2</em>}</div>
+            <div className="skill-table-level"><strong>{row.level}</strong><SkillBar level={row.level}/>{row.aboveNormalMax&&<small className="skill-overcap">CHECK</small>}</div>
+            <div className="skill-table-stat" title={row.stat||'Linked STAT not established'}><strong>{row.statValue??'—'}</strong><small>{row.stat||'?'}</small></div>
+            <strong className="skill-table-base">{row.base??'—'}</strong>
+          </div>)}
+        </section>)}
+      </div>
+      {!groups.length&&<ListEmpty text="No skills match those filters."/>}
+      <p className="footnote">Skill Level normally tops out at 10 (starting cap 6). Trained Base = current linked STAT + Skill Level, before any modifiers or 1d10 roll. Untrained entries are shown as Level 0 with no trained Base; a GM determines whether an untrained check is allowed. ×2 Skills cost twice as many improvement points. This view never modifies Nathan's saved Skills.</p>
     </Panel>
   </div>
 }

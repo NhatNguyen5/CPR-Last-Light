@@ -4,3 +4,42 @@
 @media(max-width:1150px){.sidebar{width:230px;min-width:230px}.main-body{padding:34px 26px 50px}.topbar{padding:0 26px}.site-footer{padding:20px 26px}.metric{padding:17px}.span-8{grid-column:span 12}.span-4{grid-column:span 12}.content-grid>.stacked{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .2s;width:268px;height:100vh;min-width:268px}.sidebar-open{transform:translateX(0)}.mobile-menu,.mobile-close{display:grid!important}.mobile-close{margin-left:auto}.mobile-shade{display:block!important;position:fixed;inset:0;background:#0009;border:0;z-index:10}.main-body{padding:26px 16px 35px}.topbar{height:62px;padding:0 16px}.breadcrumb{font-size:9px;gap:6px}.top-actions .tag{display:none}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{min-height:125px;padding:14px}.metric-value{font-size:29px}.section-header{margin-bottom:24px;align-items:flex-start}.section-header h1{font-size:31px}.sheet-stamp{font-size:8px}.panel{padding:20px}.content-grid{gap:12px}.content-grid>.stacked{display:flex}.stats-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.stat-tile{padding:10px 7px}.stat-tile strong{font-size:23px}.stat-tile>span{font-size:9px}.bio-header{gap:14px;align-items:flex-start}.portrait-placeholder{width:76px;min-width:76px;height:96px}.portrait-placeholder svg{width:36px}.portrait-placeholder span{font-size:8px}.bio-header h2{font-size:22px}.bio-header .subtle{font-size:11px}.skill-grid{grid-template-columns:1fr}.section-intro{flex-direction:column}.search-field{width:100%}.site-footer{padding:17px 16px;flex-direction:column;line-height:1.6}.empty-shell{padding:62px 20px}.empty-shell h2{font-size:26px}}
 @media(max-width:420px){.stats-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.stat-tile{padding:9px 5px}.stat-tile strong{font-size:20px}.stat-ticks{gap:1px}.stat-ticks b{height:3px}.metric-value{font-size:26px}.tag-row .tag{white-space:normal}.section-header .sheet-stamp{display:none}.item-count{font-size:8px}}
+
+/* Full nine-category Cyberpunk RED skill matrix. Levels run 0–10, never 0–8. */
+.skill-matrix-panel{padding:25px}
+.skills-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 19px;font:10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#8aa7a1}
+.skill-mode-button{border:1px solid #31564c;background:#142b29;color:#a0e4c9;padding:9px 13px;font:10px 'IBM Plex Mono',monospace;letter-spacing:.02em}
+.skill-mode-button:hover{background:#1c3d35}.skill-mode-button.active{border-color:#45775f}
+.skill-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.skill-category{min-width:0;border:1px solid #33514a;background:#0e1b1e;overflow:hidden}
+.skill-category-heading{background:#213a35;min-height:44px;border-bottom:1px solid #41655a;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 13px}
+.skill-category-heading h3{font:600 13px 'Space Grotesk',sans-serif;color:#d2f1e5;margin:0;letter-spacing:.01em}
+.skill-category-heading>span{color:#8fbcae;font:9px 'IBM Plex Mono',monospace;letter-spacing:.05em;white-space:nowrap}
+.skill-table-columns,.skill-table-row{display:grid;grid-template-columns:minmax(0,1fr) 94px 55px 45px;align-items:center}
+.skill-table-columns{padding:8px 0;color:#c5ebd9;background:#17282b;font:9px 'IBM Plex Mono',monospace;letter-spacing:.075em}
+.skill-table-columns>span{padding:0 7px;min-width:0}
+.skill-table-columns>span:not(:first-child){text-align:center;border-left:1px solid #2f4c49}
+.skill-table-row{min-height:40px;color:#dbebe5;border-top:1px solid #21373a;font-size:12px;transition:background .15s}
+.skill-table-row:hover{background:#1b3130}
+.skill-table-row>*:not(:first-child){height:100%;border-left:1px solid #294441;display:flex;align-items:center;justify-content:center;min-width:0}
+.skill-table-row.untrained{color:#869f9a}
+.skill-table-name{display:flex;min-width:0;align-items:center;flex-wrap:wrap;gap:4px;padding:8px 8px 8px 12px;line-height:1.4;overflow-wrap:anywhere}
+.skill-table-name span{min-width:0}
+.skill-table-name small{font:8px 'IBM Plex Mono',monospace;display:block;width:100%;text-transform:uppercase;letter-spacing:.08em;color:#79a596}
+.skill-table-name em{color:#e3b07c;font:9px 'IBM Plex Mono',monospace;border:1px solid #795937;padding:1px 3px;font-style:normal}
+.skill-table-row.specialized .skill-table-name{padding-left:19px}
+.skill-table-row.specialized .skill-table-name::before{content:'↳';color:#79aa9c;margin-right:2px}
+.skill-table-level{display:flex;flex-direction:column;gap:4px;padding:5px 5px;color:#b5ecd2}
+.skill-table-level strong{font:600 12px 'IBM Plex Mono',monospace}
+.skill-tenbar{width:100%;display:flex;gap:2px;max-width:74px;align-items:center;justify-content:center}
+.skill-tenbar i{background:#2a4945;display:block;flex:1;min-width:0;height:4px}
+.skill-tenbar i.active{background:#94e3c2}
+.skill-table-row.untrained .skill-table-level strong{color:#587a75}
+.skill-table-stat{flex-direction:column;gap:1px;font:11px 'IBM Plex Mono',monospace}
+.skill-table-stat strong{color:#cce9dc;font-weight:600}
+.skill-table-stat small{font-size:8px;color:#7b9d91}
+.skill-table-base{font:600 13px 'IBM Plex Mono',monospace;color:#d7f3e4}
+.skill-table-row.untrained .skill-table-base{color:#5d7772}
+.skill-overcap{font:8px 'IBM Plex Mono',monospace;color:#edaf74}
+@media(max-width:1050px){.skill-category-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.skill-matrix-panel{padding:16px}.skill-category-grid{gap:12px}.skill-table-columns,.skill-table-row{grid-template-columns:minmax(0,1fr) 82px 47px 39px}.skill-table-name{font-size:11px;padding-left:9px}.skill-table-row.specialized .skill-table-name{padding-left:13px}.skill-table-name small{font-size:8px}.skill-category-heading h3{font-size:12px}.skill-tenbar{max-width:67px}}
