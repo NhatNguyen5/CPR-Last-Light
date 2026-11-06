@@ -15,7 +15,7 @@ export function changeLuckSpent(current,delta,max){
  return current+delta
 }
 /** Reject malformed and unrelated records; never auto-reset just because revision changes. */
-export function readLuckSpent(storage,playerId,max){
+export function readLuckSpent(storage,playerId,max,campaignId=LUCK_TRACKER_CAMPAIGN){
  try{
   if(typeof playerId!=='string'||!playerId||!Number.isInteger(max)||max<0)return 0
   const record=JSON.parse(storage?.getItem(LUCK_TRACKER_KEY)||'null')
