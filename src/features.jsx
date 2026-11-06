@@ -167,14 +167,15 @@ export function ExecPage({vm,onNavigate}) {
 export function CombatPage({vm,onRoll,history,onShowHistory,luckMax=0,luckRemaining=0,luckReady=false,onLuckSpend,onLuckUndo,onLuckReset}) {
  const skills=Object.fromEntries(vm.skills)
  const stat=vm.stats||{}
+ const pistol=(vm.inventory||[]).find(item=>/Very Heavy Pistol/i.test(item.name||'')&&!/(round|ammo|ammunition)/i.test(item.name||''))
  const checks=[
   {label:'Initiative',stat:'REF',rank:0,kind:'initiative',desc:'Turn order · REF + 1d10 · LUCK does not apply'},
-  {label:'Handgun',stat:'REF',rank:skills.Handgun||0,kind:'check',desc:'Very Heavy Pistol · combat Skill Check · LUCK eligible'},
+  {label:'Handgun',stat:'REF',rank:skills.Handgun||0,kind:'check',desc:'Ranged attack Skill Check · LUCK eligible'},
   {label:'Evasion',stat:'DEX',rank:skills.Evasion||0,kind:'check',desc:'Defensive Skill Check · LUCK eligible'},
   {label:'Brawling',stat:'DEX',rank:skills.Brawling||0,kind:'check',desc:'Unarmed Skill Check · LUCK eligible'},
  ]
  return <div className="content-grid">
- <section className="panel span-8"><div className="panel-heading"><span className="micro-label">COMBAT REFERENCE</span><span className="tag">NO ACTIVE COMBAT</span></div>
+ <section className="panel span-8"><div className="panel-heading"><span className="micro-label">COMBAT REFERENCE</span><span className="tag">SAVED REFERENCE</span></div>
   <div className="combat-vitals"><div><HeartPulse size={17}/><strong>{vm.hp}/{vm.maxHp}</strong><small>HP</small></div><div><Shield size={17}/><strong>{vm.armorBody}</strong><small>Body SP</small></div><div><Shield size={17}/><strong>{vm.armorHead}</strong><small>Head SP</small></div></div>
   <div className="directory-heading">QUICK CHECKS</div><p className="combat-luck-hint">LUCK works on combat Skill Checks such as Handgun, Evasion, and Brawling. Commit it before rolling, add it to <strong>Modifier</strong>, then mark those points spent in the LUCK tracker. Not on Initiative or damage.</p><div className="combat-checks">{checks.map(c=><div className="combat-row" key={c.label}>
    <div><strong>{c.label}</strong><span>{c.desc}</span><small>{c.stat} {human(stat[c.stat])} {c.rank?`+ Skill ${c.rank}`:''}</small></div>
@@ -186,7 +187,7 @@ export function CombatPage({vm,onRoll,history,onShowHistory,luckMax=0,luckRemain
    <button className="roll-trigger" type="button" disabled={!Number.isInteger(stat.COOL)} aria-label="Open Facedown roll" onClick={()=>onRoll({kind:'facedown',label:'Facedown',cool:stat.COOL,base:stat.COOL,reputation:vm.reputation})}><Dices size={18}/> Facedown</button>
   </div>
   <div className="directory-heading">DAMAGE DICE</div>
-  <div className="combat-row"><div><strong>Very Heavy Pistol</strong><span>4d6 damage if a hit is confirmed</span><small>No ammo, HP, or armor is changed by rolling here.</small></div><button className="roll-trigger" onClick={()=>onRoll({kind:'damage',label:'Very Heavy Pistol · 4d6 damage',count:4,sides:6})}><Dices size={18}/> 4d6</button></div>
+  {pistol&&<div className="combat-row"><div><strong>{pistol.name}</strong><span>4d6 damage if a hit is confirmed</span><small>No ammo, HP, or armor is changed by rolling here.</small></div><button className="roll-trigger" onClick={()=>onRoll({kind:'damage',label:pistol.name+' · 4d6 damage',count:4,sides:6})}><Dices size={18}/> 4d6</button></div>}
  </section>
  <section className="panel span-4">
   <div className="micro-label">SESSION RESOURCE / PLAYER TRACKER</div>
