@@ -35,7 +35,9 @@ export function rollInitiative({base, modifier = 0, rng} = {}) {
 }
 
 export function rollFacedown({cool,reputation,modifier=0,rng}={}) {
- if(!Number.isInteger(cool)||!Number.isInteger(reputation)||!Number.isInteger(modifier))throw Error('Invalid Facedown parameters')
+ if(!Number.isInteger(cool)||cool<0||cool>20)throw Error('Invalid COOL score.')
+ if(!Number.isInteger(reputation)||reputation< -10||reputation>10)throw Error('Reputation must be a confirmed integer from -10 to 10.')
+ if(!Number.isInteger(modifier))throw Error('Invalid Facedown modifier.')
  const first=secureDie(10,rng)
  return {kind:'facedown',label:'Facedown',cool,reputation,base:cool+reputation,modifier,first,second:null,adjustment:0,total:cool+reputation+modifier+first,critical:null}
 }
@@ -49,7 +51,7 @@ export function rollDamage({label = 'Damage', count = 4, sides = 6, modifier = 0
 export function readRollLog(storage) {
   try {
     const raw=JSON.parse(storage?.getItem(ROLL_LOG_KEY)||'[]')
-    return Array.isArray(raw)?raw.filter(x=>x&&['check','initiative','damage'].includes(x.kind)&&Number.isFinite(x.total)).slice(0,30):[]
+    return Array.isArray(raw)?raw.filter(x=>x&&['check','initiative','damage','facedown'].includes(x.kind)&&Number.isFinite(x.total)).slice(0,30):[]
   }catch{return []}
 }
 export function writeRollLog(storage, records) {
@@ -60,6 +62,10 @@ export function clearRollLog(storage){try{storage?.removeItem(ROLL_LOG_KEY);retu
 export function describeRoll(roll) {
   if (!roll) return ''
   const date=roll.at?new Date(roll.at).toLocaleString():''
+  if(roll.kind==='facedown'){
+    const compared=Number.isFinite(roll.opponentTotal)?' Opponent total: '+roll.opponentTotal+' ('+(roll.total===roll.opponentTotal?'tie':roll.total>roll.opponentTotal?'higher':'lower')+').':' Opponent total pending.'
+    return 'Facedown: COOL '+roll.cool+' + Reputation '+roll.reputation+' + modifier '+roll.modifier+' + 1d10 ('+roll.first+') = '+roll.total+'.'+compared+' Local reference roll '+date+'; not committed to campaign.'
+  }
   if(roll.kind==='damage')return `${roll.label}: ${roll.dice.join(' + ')}${roll.modifier?` ${roll.modifier<0?'-':'+'} ${Math.abs(roll.modifier)}`:''} = ${roll.total}. Local reference roll ${date}; not committed to campaign.`
   const followup=roll.second!==null?` ${roll.critical==='success'?'+':'-'} ${roll.second} (critical ${roll.critical})`:''
   return `${roll.label}: ${roll.base} base ${roll.modifier<0?'-':'+'} ${Math.abs(roll.modifier)} modifier + ${roll.first}${followup} = ${roll.total}${Number.isFinite(roll.dv)?` vs DV ${roll.dv}`:''}. Local reference roll ${date}; not committed to campaign.`
