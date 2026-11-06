@@ -60,7 +60,7 @@ export function getViewModel(data) {
     housing: data.housing_and_lifestyle || {},
     obligations: data.obligations || {},
     knowledge: data.player_known_knowledge || [],
-    ip: number(pc.ip),
+    ip: Number.isInteger(pc.ip) && pc.ip >= 0 ? pc.ip : null,
   }
 }
 
