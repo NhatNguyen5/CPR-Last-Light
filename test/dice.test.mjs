@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {secureDie,rollRedCheck,rollInitiative,rollDamage,readRollLog,writeRollLog,clearRollLog,describeRoll,ROLL_LOG_KEY} from '../src/lib/dice.js'
+import {secureDie,rollRedCheck,rollInitiative,rollFacedown,rollDamage,readRollLog,writeRollLog,clearRollLog,describeRoll,ROLL_LOG_KEY} from '../src/lib/dice.js'
 const seq=(...values)=>{let i=0;return ()=>values[i++]}
 test('uniform die maps uint32 without modulo bias',()=>{
  assert.equal(secureDie(10,seq(0)),1)
@@ -31,4 +31,28 @@ test('roll history stays local, bounded, clearable; descriptions retain breakdow
  assert.equal(readRollLog(store).length,30)
  assert.match(describeRoll({...rollRedCheck({label:'Handgun',base:12,rng:seq(5)}),at:1000}),/not committed/)
  assert.equal(clearRollLog(store),true);assert.equal(store.has,undefined);assert.equal(data.has(ROLL_LOG_KEY),false)
+})
+
+test('Facedown uses COOL and entered Reputation, with one ordinary d10',()=>{
+ const roll=rollFacedown({cool:8,reputation:0,modifier:-2,rng:seq(9)})
+ assert.equal(roll.kind,'facedown')
+ assert.equal(roll.total,16)
+ assert.equal(roll.first,10)
+ assert.equal(roll.second,null)
+ assert.equal(roll.critical,null)
+ const negative=rollFacedown({cool:8,reputation:-3,rng:seq(0)})
+ assert.equal(negative.total,6)
+ assert.match(describeRoll({...negative,opponentTotal:6}),/tie/)
+})
+test('Facedown requires a confirmed Reputation and no invented opponent roll',()=>{
+ assert.throws(()=>rollFacedown({cool:8,rng:seq(5)}),/Reputation/)
+ assert.throws(()=>rollFacedown({cool:8,reputation:11,rng:seq(5)}),/Reputation/)
+ const roll=rollFacedown({cool:8,reputation:2,rng:seq(5)})
+ assert.equal(roll.total,16)
+ assert.ok(!Object.hasOwn(roll,'opponentTotal'))
+ const data=new Map()
+ const storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)}
+ writeRollLog(storage,[{...roll,at:12345,opponentTotal:null}])
+ assert.equal(readRollLog(storage)[0].kind,'facedown')
+ assert.match(describeRoll(roll),/pending/)
 })
