@@ -1,0 +1,1 @@
+export const RED_ROLES={Exec:'Teamwork',Solo:'Combat Awareness',Netrunner:'Interface',Tech:'Maker',Medtech:'Medicine',Media:'Credibility',Lawman:'Backup',Fixer:'Operator',Nomad:'Moto',Rockerboy:'Charismatic Impact'}
