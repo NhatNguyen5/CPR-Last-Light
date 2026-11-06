@@ -134,3 +134,5 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - The profile reads the **existing private `PLAYER_SHEET.json` projection**. No new character data or personal details are hard-coded into the public site. It lists verified attributes, HP, serious-wound threshold, Death Save, agreed fixed Loyalty and its provenance, skill tiers, cyberware package, company vehicle, and issued equipment. Driver equipment is matched by `company_driver.equipment_ids` against the already filtered player-safe items, never fetched from the canonical save.
 - Identity and HR cover title remain explicitly pending. When the campaign later establishes them and refreshes the player-only projection, the roster updates without changing site code. No actions, Loyalty checks, NPC introductions, or fictional time are triggered by opening the page.
 - **No Drive save was modified** to implement this view. The public repository contains interface code and tests only, not the private player projection or canonical campaign state.
+
+Facedown uses COOL + Reputation + 1d10 in an opposed check.
