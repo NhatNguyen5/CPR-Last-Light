@@ -398,3 +398,16 @@
 .combat-luck-hint strong,.roll-luck-hint strong{color:#e1f7e7}
 .roll-luck-hint{margin:16px 0 2px;padding:10px 12px;border-left:2px solid #d0b77d;background:#2b2c23;color:#d2d2b7;font-size:11px;line-height:1.65}
 @media(max-width:760px){.combat-luck-hint{font-size:11px;padding:9px 10px}}
+
+/* Saved Reputation in sticky header; compact IP summary directly above Skills. */
+.rep-chip{display:flex;flex:0 0 auto;align-items:center;gap:6px;min-height:40px;padding:0 11px;background:#182930;border:1px solid #3a5f69;color:#c1dfeb;font:600 11px 'IBM Plex Mono',monospace;white-space:nowrap}
+.rep-chip span{letter-spacing:.06em;font-size:10px;color:#83b1bd}
+.rep-chip strong{font-size:14px;color:#d4f4ff;font-variant-numeric:tabular-nums}
+.skill-ip-banner{display:flex;justify-content:space-between;align-items:center;min-width:0;gap:16px;padding:13px 18px;background:linear-gradient(105deg,#263527,#1a2b28);border:1px solid #577452;border-left:3px solid #c9b375;color:#d4eacf}
+.skill-ip-intro{display:flex;flex-direction:column;gap:5px;min-width:0}
+.skill-ip-intro>span{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.075em;color:#bfddaa}
+.skill-ip-intro>small{font:10px 'IBM Plex Mono',monospace;color:#8ca58e;line-height:1.4}
+.skill-ip-banner>strong{flex:0 0 auto;font:600 28px 'Space Grotesk',sans-serif;color:#ecd49a;font-variant-numeric:tabular-nums}
+.skill-ip-banner>strong small{font:600 11px 'IBM Plex Mono',monospace;color:#b5af84}
+@media(max-width:760px){.rep-chip{min-height:37px;padding:0 8px;gap:4px}.rep-chip span{font-size:9px}.rep-chip strong{font-size:12px}.skill-ip-banner{padding:10px 13px;gap:8px}.skill-ip-intro>span{font-size:9px}.skill-ip-intro>small{font-size:9px}.skill-ip-banner>strong{font-size:25px}}
+@media(max-width:390px){.topbar-brand-name{display:none!important}.rep-chip{padding:0 6px}.topbar-brand .helix-logo{width:33px;height:33px}.top-left{gap:3px!important}}
