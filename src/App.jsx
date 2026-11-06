@@ -14,6 +14,8 @@ import {readRollLog, writeRollLog, clearRollLog} from './lib/dice.js'
 import {readLuckSpent,writeLuckSpent,changeLuckSpent,remainingLuck} from './lib/luck.js'
 import {AgentHub, ContactsPage, KnownNpcsPage, CompanyPersonnelPage, ExecPage, CombatPage, RollDialog, RollHistoryDialog} from './features.jsx'
 import {Inventory, Cyberware} from './inventory.jsx'
+import {CharacterMenu} from './CharacterMenu.jsx'
+import {RolePage} from './RolePage.jsx'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
 const HELIX_MARK_URL = `${import.meta.env.BASE_URL}helix-mark.svg`
