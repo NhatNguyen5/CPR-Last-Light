@@ -46,6 +46,8 @@ export function getViewModel(data) {
     skills: Object.entries(pc.skills || {}).sort((a,b)=> a[0].localeCompare(b[0])),
     inventory: personal,
     companyBenefits: inventory.filter(i => ['exec_company_benefit','exec_company_team_driver_package'].includes(i.acquisition)),
+    // Driver assets are drawn from the already player-safe projection, never the canonical save.
+    companyPersonnelAssets: inventory.filter(i => (data.company_driver?.equipment_ids || []).includes(i.id)),
     gear,
     cyberware: personal.filter(i=>cyberwareNames.has(i.id) || /Biomonitor/i.test(i.name)),
     ammo: data.equipment_and_property?.ammo_state || {},

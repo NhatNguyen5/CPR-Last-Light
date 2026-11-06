@@ -2,9 +2,10 @@ import {useEffect,useMemo,useState} from 'react'
 import {
   Activity, BookOpen, BriefcaseBusiness, ChevronRight, Cloud, ContactRound,
   Cpu, Dices, FileText, HeartPulse, LockKeyhole, MapPin, Search, ChevronLeft, Smartphone, Signal,
-  Shield, UserRound, UsersRound, X, CarFront, RotateCcw, Copy, Trash2,
+  Shield, UserRound, UsersRound, X, CarFront, RotateCcw, Copy, Trash2, Building2, IdCard,
 } from 'lucide-react'
 import {knownPeople,contactPeople} from './lib/people.js'
+import {getCompanyPersonnel} from './lib/companyPersonnel.js'
 import {rollRedCheck,rollInitiative,rollDamage,describeRoll} from './lib/dice.js'
 
 const human=v => v===undefined||v===null||v===''?'Not recorded':String(v)
@@ -21,6 +22,7 @@ export function AgentHub({vm,onNavigate}) {
  const entries=[
   {id:'contacts',label:'Contacts',sub:'Personal directory',Icon:ContactRound,number:contactPeople(vm).length},
   {id:'npcs',label:'Known NPCs',sub:'Player-known dossiers',Icon:UsersRound,number:knownPeople(vm).length},
+  {id:'personnel',label:'Company Personnel',sub:'Assigned Helix staff',Icon:IdCard,number:getCompanyPersonnel(vm).length},
   {id:'records',label:'Records',sub:'History and journal',Icon:BookOpen},
   {id:'cyberware',label:'Cyberware',sub:'Augmentation record',Icon:Cpu},
   {id:'exec',label:'Teamwork',sub:'Exec resources',Icon:BriefcaseBusiness},
@@ -107,7 +109,46 @@ export function KnownNpcsPage({vm}) {
   <p className="footnote">This index excludes unrevealed people from the GM's preparations. The company driver is an assigned employee, but their identity remains unestablished until introduced.</p>
  </section><PersonDossier person={selected} onClose={()=>setSelected(null)}/></div>
 }
-export function ExecPage({vm}) {
+/** Assigned staff are distinct from Known NPCs until introduced on-screen. */
+export function CompanyPersonnelPage({vm}) {
+ const roster = useMemo(()=>getCompanyPersonnel(vm),[vm])
+ const [selectedId,setSelectedId]=useState(null)
+ const active=roster.find(p=>p.id===selectedId) || roster[0]
+ const statOrder=['INT','REF','DEX','TECH','COOL','WILL','MOVE','BODY','EMP']
+ return <div className="content-grid">
+  <section className="panel span-12 company-personnel-panel">
+   <div className="panel-heading"><span className="micro-label">HELIX MERIDIAN / ASSIGNED PERSONNEL</span><span className="tag">R{vm.revision} · PLAYER-SAFE</span></div>
+   <div className="personnel-intro"><div><h2>Company Personnel</h2><p>Employees assigned to Nathan through established corporate benefits. Appointment does not imply personal acquaintance.</p></div><Building2 size={32} strokeWidth={1.5}/></div>
+   {!roster.length?<div className="empty-inline">No assigned company personnel are present in the current player projection.</div>:<div className="personnel-layout">
+    <div className="personnel-directory" aria-label="Assigned company personnel">
+     {roster.map(p=><button className={'personnel-person'+(active?.id===p.id?' selected':'')} key={p.id} onClick={()=>setSelectedId(p.id)} aria-current={active?.id===p.id?'true':undefined}>
+       <span className="personnel-avatar"><CarFront size={23}/></span>
+       <span><strong>{p.label}</strong><small>{p.role}</small><small>{p.identityPending?'Identity pending on-screen introduction':'Named in player projection'}</small></span>
+       <ChevronRight size={17}/>
+     </button>)}
+    </div>
+    {active&&<article className="personnel-dossier">
+     <div className="personnel-profile-head"><div className="personnel-avatar large"><CarFront size={30}/></div><div><span className="micro-label">TEAMWORK / COMPANY DRIVER</span><h3>{active.label}</h3><p>{active.identityPending?'Personal name not yet established':active.role} · HR title: {active.jobTitle||'Not yet designated'}</p></div></div>
+     <p className="personnel-note">Assigned by Helix Meridian. The employee is an independent NPC under GM control, not an extension of Nathan. Personal background, personality, and current physical location remain unestablished.</p>
+     <div className="personnel-kpis">
+       <div><span>LOYALTY</span><strong>{active.loyalty??'—'}</strong><small>Fixed agreed value; not a roll</small></div>
+       <div><span>HIT POINTS</span><strong>{active.derived.current_hp??'—'}<em> / {active.derived.max_hp??'—'}</em></strong><small>Current / maximum</small></div>
+       <div><span>DEATH SAVE</span><strong>{active.derived.death_save??'—'}</strong><small>Threshold: {active.derived.seriously_wounded_threshold_hp??'—'} HP</small></div>
+     </div>
+     <section className="personnel-section"><h4>Core attributes</h4><div className="personnel-stat-grid">{statOrder.map(key=><div key={key}><span>{key}</span><strong>{active.stats[key]??'—'}</strong></div>)}</div><p className="personnel-subnote">Template row 2 is a fixed character-creation selection, not an actual dice result. No LUCK score is supplied in the teammate template.</p></section>
+     <section className="personnel-section"><h4>Company vehicle</h4>{active.vehicle?<div className="personnel-asset"><CarFront size={18}/><div><strong>{active.vehicle.name}</strong><small>{active.vehicle.notes||'Helix Meridian company property'}</small><small>Parking / current custody: {active.vehicle.custody_or_location||'Not established'}</small></div></div>:<p className="personnel-muted">Vehicle assignment is referenced, but no matching player-visible asset is recorded.</p>}</section>
+     <section className="personnel-section"><h4>Issued equipment</h4>{active.equipment.length?<div className="personnel-assets">{active.equipment.map(item=><div className="personnel-asset" key={item.id}><Shield size={17}/><div><strong>{item.name} <span className="personnel-count">×{item.quantity??1}</span></strong><small>{item.notes||item.custody_or_location||'Company-issued equipment'}</small></div></div>)}</div>:<p className="personnel-muted">No issued equipment details are recorded in the current player projection.</p>}</section>
+     <section className="personnel-section"><h4>Cyberware package</h4>{active.cyberware.length?<div className="personnel-pills">{active.cyberware.map(name=><span key={name}>{name}</span>)}</div>:<p className="personnel-muted">Not recorded.</p>}</section>
+     <section className="personnel-section"><h4>Template skill levels</h4>{active.skills.length?<div className="personnel-skill-tiers">{active.skills.map(tier=><div key={tier.rank}><strong>Level {tier.rank}</strong><p>{tier.skills.join(' · ')}</p></div>)}</div>:<p className="personnel-muted">No skill ranks available.</p>}</section>
+     <section className="personnel-section"><h4>Employment policies</h4>{active.policies.length?<ul className="personnel-policies">{active.policies.map(rule=><li key={rule}>{rule}</li>)}</ul>:<p className="personnel-muted">No policies supplied.</p>}</section>
+     <p className="footnote">This is a read-only player-safe company roster. All values are taken from the private Drive projection; missing identities and details are not invented. The canonical campaign, NPC choices, and fictional time remain unchanged.</p>
+    </article>}
+   </div>}
+  </section>
+ </div>
+}
+
+export function ExecPage({vm,onNavigate}) {
  const driver=vm.driver||{}
  return <div className="content-grid">
   <section className="panel span-8"><div className="panel-heading"><span className="micro-label">ROLE ABILITY</span><span className="tag tag-accent">RANK {vm.rank?.level}</span></div>
@@ -115,6 +156,7 @@ export function ExecPage({vm}) {
    <div className="role-feature"><CarFront size={22}/><div><strong>Company Driver</strong><p>{unknown(driver.name)?'Name not established':driver.name} · Loyalty {human(driver.loyalty)} (agreed fixed value)</p><small>Independent company employee. Transport and vehicle support; not a dedicated bodyguard.</small></div></div>
    <div className="role-feature"><Shield size={22}/><div><strong>Company vehicle</strong><p>Compact groundcar with seating upgrade</p><small>Provided by Helix Meridian. Not Nathan's personal property.</small></div></div>
    <div className="role-feature"><BriefcaseBusiness size={22}/><div><strong>Corporate housing</strong><p>Company conapt shared with Anna</p><small>Rent covered while Nathan retains the eligible corporate benefit.</small></div></div>
+   <button type="button" className="btn outline personnel-exec-link" onClick={()=>onNavigate('personnel')}>View Company Personnel <ChevronRight size={17}/></button>
   </section>
   <section className="panel span-4"><div className="micro-label">COMPANY / COMMITMENTS</div><h2 className="page-side-title">Operating status</h2><div className="dossier-details">
     <div><dt>Employer</dt><dd>{vm.employer}</dd></div><div><dt>Division</dt><dd>{vm.department}</dd></div><div><dt>Living arrangement</dt><dd>{human(vm.housing.housing_type)}</dd></div><div><dt>Next lifestyle due</dt><dd>{human(vm.housing.next_lifestyle_due_fictional_date)}</dd></div>

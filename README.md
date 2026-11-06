@@ -126,3 +126,11 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - Individual item cards summarize **core rulebook data** with linked reference pages, mechanics, saved custody, and saved item notes. Summaries are paraphrased rather than copied wholesale. Where the rulebook has no corresponding entry, the card identifies itself as a saved campaign record rather than guessing.
 - Each personally owned item exposes **− / +** quantity buttons. These change an in-memory *proposal* only, never the verified inventory, loaded magazine, prices, money, HP, Humanity, installation status, or fictional time. The draft can be copied for GM reconciliation or reset. Company-owned assets are clearly marked and do not expose personal quantity controls. Reloading the viewer discards unsaved proposals.
 - The separate `PLAYER_SHEET.json` continues to be the only data source exposed to the website; all item reference descriptions are a static rules catalog that conveys no character possessions on its own.
+
+
+### Company Personnel directory (November 2026)
+
+- **Agent → Company Personnel** displays the assigned chauffeur as an independent Helix Meridian employee. The **Exec → Teamwork** screen links to the same roster. This is separate from **Known NPCs**, because being assigned a teammate does not establish an on-screen introduction.
+- The profile reads the **existing private `PLAYER_SHEET.json` projection**. No new character data or personal details are hard-coded into the public site. It lists verified attributes, HP, serious-wound threshold, Death Save, agreed fixed Loyalty and its provenance, skill tiers, cyberware package, company vehicle, and issued equipment. Driver equipment is matched by `company_driver.equipment_ids` against the already filtered player-safe items, never fetched from the canonical save.
+- Identity and HR cover title remain explicitly pending. When the campaign later establishes them and refreshes the player-only projection, the roster updates without changing site code. No actions, Loyalty checks, NPC introductions, or fictional time are triggered by opening the page.
+- **No Drive save was modified** to implement this view. The public repository contains interface code and tests only, not the private player projection or canonical campaign state.

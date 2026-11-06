@@ -316,3 +316,54 @@
 .gear-draft-actions{display:flex;gap:8px}
 .gear-draft-actions button{display:flex;align-items:center;gap:6px;border:1px solid #527c5b;color:#dbf4dc;background:#204630;font-size:12px;padding:10px}
 @media(max-width:760px){.gear-browser-heading{padding:17px 13px}.gear-browser-heading h2{font-size:21px}.gear-tab-strip{top:57px}.gear-tab-strip button{padding:0 15px;min-height:49px;font-size:13px}.inventory-draft-note{padding:11px 13px}.gear-card-list{padding:0 12px 8px}.gear-entry{padding:18px 0}.gear-entry-icon{height:34px;width:34px}.gear-entry-icon svg{width:18px}.gear-entry-main{gap:8px}.gear-entry-title strong{font-size:15px}.gear-description{font-size:12px}.gear-rule-line{font-size:11px}.gear-quantity{min-width:81px}.gear-quantity-buttons button{width:24px;height:31px}.gear-quantity-buttons output{min-width:27px;font-size:12px}.gear-detail-toggle,.gear-entry-details{margin-left:42px}.gear-bottom-note{padding:10px 13px}.gear-draft-footer{padding:12px 13px}}
+
+/* Company Personnel: verified team records, separated from introduced NPC contacts. */
+.personnel-intro{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+.personnel-intro h2{font:600 27px 'Space Grotesk',sans-serif;letter-spacing:-.025em;margin:0 0 6px}
+.personnel-intro p{font-size:12px;line-height:1.6;color:#8aa99d;max-width:640px;margin:0}
+.personnel-intro>svg{flex-shrink:0;color:#91c9b1}
+.personnel-layout{display:grid;grid-template-columns:minmax(190px,280px) minmax(0,1fr);gap:18px;align-items:start}
+.personnel-directory{display:flex;flex-direction:column;gap:8px}
+.personnel-person{display:flex;align-items:center;gap:11px;width:100%;background:#10251f;color:#deefe6;border:1px solid #2b4a40;text-align:left;padding:13px 10px;min-width:0}
+.personnel-person.selected{background:#1e3c30;border-color:#6caa86}
+.personnel-person>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:5px;min-width:0}
+.personnel-person strong{font:600 13px 'Space Grotesk',sans-serif;line-height:1.3}
+.personnel-person small{font-size:10px;line-height:1.4;color:#89a897}
+.personnel-person>svg{color:#7eac92;flex-shrink:0}
+.personnel-avatar{height:43px;width:43px;flex:0 0 auto;display:grid;place-items:center;background:#254e3b;color:#a6e1c2;border:1px solid #4a8469}
+.personnel-avatar.large{height:57px;width:57px}
+.personnel-dossier{min-width:0;border:1px solid #2d493f;background:#0d1d1c;padding:24px}
+.personnel-profile-head{display:flex;gap:16px;align-items:center}
+.personnel-profile-head h3{font:600 22px 'Space Grotesk',sans-serif;line-height:1.24;margin:5px 0 3px}
+.personnel-profile-head p{font-size:11px;color:#93b4a2;line-height:1.5;margin:0}
+.personnel-note{font-size:12px;color:#a1bbae;line-height:1.6;padding:12px 14px;margin:18px 0;border-left:2px solid #c9a16d;background:#273024}
+.personnel-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:17px 0 22px}
+.personnel-kpis>div{background:#18332a;border:1px solid #305b49;padding:13px 10px;min-width:0}
+.personnel-kpis span,.personnel-kpis small{display:block;font:9px 'IBM Plex Mono',monospace;color:#86b69f;letter-spacing:.07em;line-height:1.5}
+.personnel-kpis strong{display:block;font:600 26px 'Space Grotesk',sans-serif;color:#dcf8e7;margin:5px 0}
+.personnel-kpis strong em{font-style:normal;color:#8db5a2;font-size:13px;font-weight:400}
+.personnel-kpis small{letter-spacing:0;color:#9eb6a7}
+.personnel-section{margin:19px 0;border-top:1px solid #294438;padding-top:19px}
+.personnel-section h4{font:600 15px 'Space Grotesk',sans-serif;margin:0 0 12px;color:#c6e6d4}
+.personnel-stat-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px}
+.personnel-stat-grid>div{text-align:center;background:#19342b;border:1px solid #355645;padding:10px 3px}
+.personnel-stat-grid span{display:block;font:9px 'IBM Plex Mono',monospace;color:#8dbea4}
+.personnel-stat-grid strong{display:block;font:600 23px 'Space Grotesk',sans-serif;margin-top:4px}
+.personnel-subnote,.personnel-muted{font-size:11px;color:#8aab99;line-height:1.6;margin:10px 0 0}
+.personnel-assets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.personnel-asset{display:flex;align-items:flex-start;gap:11px;padding:12px;border:1px solid #29493a;background:#132720;min-width:0}
+.personnel-asset svg{color:#8fcaa5;flex-shrink:0}
+.personnel-asset div{min-width:0}
+.personnel-asset strong{font-size:12px;line-height:1.5;color:#d9efdf;display:block}
+.personnel-asset small{display:block;font-size:10px;line-height:1.5;color:#93b09e;margin-top:4px}
+.personnel-count{font:10px 'IBM Plex Mono',monospace;color:#b4e8c8}
+.personnel-pills{display:flex;flex-wrap:wrap;gap:7px}
+.personnel-pills>span{padding:7px 9px;border:1px solid #345c47;background:#173529;font-size:11px;color:#c3e4cf}
+.personnel-skill-tiers{display:grid;gap:10px}
+.personnel-skill-tiers>div{display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px solid #253d32}
+.personnel-skill-tiers strong{font:600 12px 'IBM Plex Mono',monospace;color:#a2d9b9}
+.personnel-skill-tiers p{font-size:11px;line-height:1.75;color:#accab8;margin:0}
+.personnel-policies{padding-left:20px;font-size:11px;line-height:1.75;color:#b3cbbd}
+.personnel-exec-link{margin-top:16px;width:100%}
+@media(max-width:980px){.personnel-layout{grid-template-columns:1fr}.personnel-stat-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:760px){.company-personnel-panel{padding:17px}.personnel-intro h2{font-size:24px}.personnel-intro>svg{width:24px}.personnel-dossier{padding:16px}.personnel-profile-head h3{font-size:19px}.personnel-kpis{gap:6px}.personnel-kpis>div{padding:10px 7px}.personnel-kpis strong{font-size:22px}.personnel-kpis span,.personnel-kpis small{font-size:8px}.personnel-assets{grid-template-columns:1fr}.personnel-stat-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}

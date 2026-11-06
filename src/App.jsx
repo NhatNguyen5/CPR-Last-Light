@@ -11,7 +11,7 @@ import {getViewModel, validatePlayerSheet} from './lib/projection.js'
 import {readCachedPlayerSheet, writeCachedPlayerSheet, clearCachedPlayerSheet} from './lib/cache.js'
 import {buildSkillGroups, SKILL_MAX_LEVEL} from './lib/skillCatalog.js'
 import {readRollLog, writeRollLog, clearRollLog} from './lib/dice.js'
-import {AgentHub, ContactsPage, KnownNpcsPage, ExecPage, CombatPage, RollDialog, RollHistoryDialog} from './features.jsx'
+import {AgentHub, ContactsPage, KnownNpcsPage, CompanyPersonnelPage, ExecPage, CombatPage, RollDialog, RollHistoryDialog} from './features.jsx'
 import {Inventory, Cyberware} from './inventory.jsx'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
@@ -21,8 +21,8 @@ const nav = [
   ['overview','Bio',UserRound],['skills','Skills',Activity],['inventory','Gear',Shield],
   ['agent','Agent',FileJson2],['combat','Combat',Dices],['exec','Exec',BriefcaseBusiness],
 ]
-const agentSubs = new Set(['contacts','npcs','records','cyberware'])
-const allPageTitles = {overview:'Bio',skills:'Skills',inventory:'Gear',agent:'Agent',combat:'Combat',exec:'Teamwork',contacts:'Contacts',npcs:'Known NPCs',records:'Records',cyberware:'Cyberware'}
+const agentSubs = new Set(['contacts','npcs','personnel','records','cyberware'])
+const allPageTitles = {overview:'Bio',skills:'Skills',inventory:'Gear',agent:'Agent',combat:'Combat',exec:'Teamwork',contacts:'Contacts',npcs:'Known NPCs',personnel:'Company Personnel',records:'Records',cyberware:'Cyberware'}
 const statOrder = ['INT','REF','DEX','TECH','COOL','WILL','LUCK','MOVE','BODY','EMP']
 const fmt = (value, fallback='—') => value === undefined || value === null || value === '' ? fallback : Array.isArray(value) ? value.map(v => fmt(v)).join(' · ') : typeof value === 'object' ? Object.entries(value).map(([k,v]) => `${k}: ${fmt(v)}`).join(' · ') : String(value)
 const cleanUnknown = text => (typeof text === 'string' && /^unestablished|^undetermined|^not yet|^unknown/i.test(text)) ? 'Undetermined' : fmt(text)
@@ -111,7 +111,7 @@ function Records({vm}) {
  return <div className="content-grid"><Panel className="span-8" label="LIFEPATH LOG"><div className="record-list"><div><span>ORIGIN</span><p>{fmt(b.original_family_background)}</p></div><div><span>CHILDHOOD</span><p>{fmt(b.childhood_environment)}</p></div><div><span>FAMILY HISTORY</span><p>{fmt(b.family_crisis)}</p></div><div><span>RELATIONSHIP</span><p>{fmt(b.relationship_milestones)}</p></div><div><span>CAREER</span><p>{fmt(b.career_transition)}</p></div><div><span>MOVE TO NIGHT CITY</span><p>{fmt(b.move_to_night_city)}</p></div></div></Panel>
  <div className="span-4 stacked"><Panel label="CHECKPOINT"><div className="hero-numeric">R{vm.revision}</div><div className="subtle smaller">Canonical checkpoint revision</div><div className="panel-separator"/><Details pairs={[["Campaign","CPR-HELIX-LAST-LIGHT-001"],["IP",vm.ip],["Last fictional date",formatDate(vm.date)],["Current time",vm.time]]}/></Panel><Panel label="CAMPAIGN NOTES"><div className="record-list">{vm.knowledge.length?vm.knowledge.map((line,i)=><div key={i}><p>{line}</p></div>):<ListEmpty/>}</div><p className="footnote">Only facts Nathan knows are visible here. No unrevealed NPC truths or future plots.</p></Panel></div></div>
 }
-const pages={overview:Overview,skills:Skills,inventory:Inventory,agent:AgentHub,combat:CombatPage,exec:ExecPage,contacts:ContactsPage,npcs:KnownNpcsPage,cyberware:Cyberware,records:Records}
+const pages={overview:Overview,skills:Skills,inventory:Inventory,agent:AgentHub,combat:CombatPage,exec:ExecPage,contacts:ContactsPage,npcs:KnownNpcsPage,personnel:CompanyPersonnelPage,cyberware:Cyberware,records:Records}
 function EmptyState({onConnect, onSelectLocal,loading,configured,error,hasToken,openPicker}) {
  return <div className="empty-shell"><div className="empty-diamond"><LockKeyhole size={30}/></div><div className="overline">SECURE PERSONNEL ACCESS // DRIVE VAULT</div><h2>PRIVATE DOSSIER ACCESS</h2><p>The viewer never stores your character in GitHub. Authorize your Google account to read the player-only projection, or inspect a local export without uploading it.</p>
  <div className="empty-actions"><button className="btn primary" disabled={!configured||loading} onClick={onConnect}><Cloud size={16}/>{loading?'AUTHENTICATING…':hasToken?'Reconnect Google':'Connect Google Drive'}<ArrowRight size={15}/></button><button className="btn outline" onClick={onSelectLocal}><ArrowDownToLine size={16}/>Open local export</button></div>
