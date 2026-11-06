@@ -41,6 +41,7 @@ export function getViewModel(data) {
     armorBody: number(pc.condition?.armor_body_sp),
     armorHead: number(pc.condition?.armor_head_sp),
     credits: number(pc.money?.liquid_balance_eb),
+    reputation: Number.isInteger(pc.reputation) ? pc.reputation : null,
     stats: pc.current_stats || {},
     baseEmp: pc.base_stats?.EMP,
     skills: Object.entries(pc.skills || {}).sort((a,b)=> a[0].localeCompare(b[0])),
