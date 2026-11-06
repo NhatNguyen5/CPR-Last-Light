@@ -1,6 +1,6 @@
 import {validatePlayerSheet} from './projection.js'
 import {readCachedPlayerSheet} from './cache.js'
-import {config} from '../config.js'
+const NATHAN_FILE_ID = '1aDYZX-cWZYem0yO5-KAqH4VwUUYg1f8e'
 
 export const PROFILE_INDEX_KEY='cpr-last-light:character-profiles-v1'
 export const ACTIVE_PROFILE_KEY='cpr-last-light:active-profile-v1'
@@ -20,7 +20,7 @@ export function profileKey(campaignId,characterId){
 export function defaultProfile(){return {
  key:DEFAULT_PROFILE_KEY,campaignId:'CPR-HELIX-LAST-LIGHT-001',
  characterId:'CPR-HELIX-PC-001',name:'Nathan Guen',role:'Exec',
- fileId:config.expectedPlayerFileId,source:'drive',
+ fileId:NATHAN_FILE_ID,source:'drive',
 }}
 export function profileFromSheet(sheet,fileId='',source='local'){
  const safe=validatePlayerSheet(sheet),pc=safe.player_character
@@ -54,7 +54,7 @@ export function readProfiles(storage){
  // Persisted metadata for Nathan may refresh his name/role but must never change his identity.
  const stored=list.find(p=>p?.key===DEFAULT_PROFILE_KEY)
  const p=sanitizeProfile(stored)
- if(p)result[0]={...p,fileId:p.fileId||config.expectedPlayerFileId}
+ if(p)result[0]={...p,fileId:p.fileId||NATHAN_FILE_ID}
  return result
 }
 export function writeProfiles(storage,profiles){
@@ -97,7 +97,7 @@ export function readProfileSnapshot(storage,profile){
   }
   // Seamless migration of Nathan's pre-existing private offline copy.
   if(profile.key===DEFAULT_PROFILE_KEY){
-   const legacy=readCachedPlayerSheet(storage,config.expectedPlayerFileId)
+   const legacy=readCachedPlayerSheet(storage,NATHAN_FILE_ID)
    if(legacy) return legacy
   }
  }catch{}
