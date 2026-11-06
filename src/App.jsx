@@ -3,20 +3,24 @@ import {
   Activity, ArrowDownToLine, ArrowRight, BriefcaseBusiness, CheckCircle2, ChevronRight,
   CircleHelp, Cloud, CloudOff, Cpu, ExternalLink, FileJson2, Fingerprint, HeartPulse,
   Home, IdCard, Layers3, LockKeyhole, LogOut, Menu, Radar, RefreshCcw, Search,
-  Shield, ShieldCheck, Terminal, UserRound, UsersRound, Wallet, X, Zap,
+  Shield, ShieldCheck, Terminal, UserRound, UsersRound, Wallet, X, Zap, Dices, ArrowLeft,
 } from 'lucide-react'
 import {config} from './config.js'
 import {fetchDriveJson, initTokenClient, loadGoogleSdk, openGooglePicker} from './lib/drive.js'
 import {getViewModel, validatePlayerSheet} from './lib/projection.js'
 import {readCachedPlayerSheet, writeCachedPlayerSheet, clearCachedPlayerSheet} from './lib/cache.js'
 import {buildSkillGroups, SKILL_MAX_LEVEL} from './lib/skillCatalog.js'
+import {readRollLog, writeRollLog, clearRollLog} from './lib/dice.js'
+import {AgentHub, ContactsPage, KnownNpcsPage, ExecPage, CombatPage, RollDialog, RollHistoryDialog} from './features.jsx'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
 const browserStorage = () => {try{return window.localStorage}catch{return null}}
 const nav = [
-  ['overview','Overview',Layers3],['skills','Skills',Activity],['inventory','Inventory',Shield],
-  ['cyberware','Cyberware',Cpu],['contacts','Contacts',UsersRound],['records','Records',FileJson2],
+  ['overview','Bio',UserRound],['skills','Skills',Activity],['inventory','Gear',Shield],
+  ['agent','Agent',FileJson2],['combat','Combat',Dices],['exec','Exec',BriefcaseBusiness],
 ]
+const agentSubs = new Set(['contacts','npcs','records','cyberware'])
+const allPageTitles = {overview:'Bio',skills:'Skills',inventory:'Gear',agent:'Agent',combat:'Combat',exec:'Teamwork',contacts:'Contacts',npcs:'Known NPCs',records:'Records',cyberware:'Cyberware'}
 const statOrder = ['INT','REF','DEX','TECH','COOL','WILL','LUCK','MOVE','BODY','EMP']
 const fmt = (value, fallback='—') => value === undefined || value === null || value === '' ? fallback : Array.isArray(value) ? value.map(v => fmt(v)).join(' · ') : typeof value === 'object' ? Object.entries(value).map(([k,v]) => `${k}: ${fmt(v)}`).join(' · ') : String(value)
 const cleanUnknown = text => (typeof text === 'string' && /^unestablished|^undetermined|^not yet|^unknown/i.test(text)) ? 'Undetermined' : fmt(text)
@@ -64,13 +68,14 @@ function SkillBar({level}) {
     {Array.from({length:SKILL_MAX_LEVEL},(_,i)=><i key={i} className={i<level?'active':''}/>)}
   </div>
 }
-function Skills({vm}) {
+function Skills({vm,onRoll}) {
   const [search,setSearch]=useState('')
   const [showUntrained,setShowUntrained]=useState(true)
   const learned=useMemo(()=>Object.fromEntries(vm.skills),[vm.skills])
   const groups=useMemo(()=>buildSkillGroups(learned,vm.stats,{search,trainedOnly:!showUntrained}),[learned,vm.stats,search,showUntrained])
   const shown=groups.reduce((count,g)=>count+g.rows.length,0)
   return <div className="content-grid">
+    <div className="span-12 skill-stat-strip" aria-label="Current attribute values">{statOrder.map(key=><div key={key}><span>{key}</span><strong>{vm.stats[key]??'—'}</strong></div>)}</div>
     <Panel className="span-12 skill-matrix-panel" label="SKILL MATRIX // CYBERPUNK RED" right={<Tag>{vm.skills.length} trained specializations</Tag>}>
       <div className="section-intro">
         <div><h2>Capabilities</h2><p>Nine core categories · Level / STAT / Base · Saved revision {vm.revision}</p></div>
@@ -90,7 +95,7 @@ function Skills({vm}) {
             <div className="skill-table-name" title={row.name}>{row.parent&&<small>{row.parent}</small>}<span>{row.label}</span>{row.doubleCost&&<em title="Costs twice as many improvement points">×2</em>}</div>
             <div className="skill-table-level"><strong>{row.level}</strong><SkillBar level={row.level}/>{row.aboveNormalMax&&<small className="skill-overcap">CHECK</small>}</div>
             <div className="skill-table-stat" title={row.stat||'Linked STAT not established'}><strong>{row.statValue??'—'}</strong><small>{row.stat||'?'}</small></div>
-            <strong className="skill-table-base">{row.base??'—'}</strong>
+            <div className="skill-table-base">{row.trained&&row.base!==null?<button className="skill-roll-button" type="button" title={`Roll ${row.name}: +${row.base}`} aria-label={`Roll ${row.name}, base ${row.base}`} onClick={()=>onRoll({kind:'check',label:row.name,base:row.base,stat:row.stat,rank:row.level})}><Dices size={12}/> +{row.base}</button>:<span>—</span>}</div>
           </div>)}
         </section>)}
       </div>
@@ -123,17 +128,12 @@ function Cyberware({vm}) {
    <Panel label="CYBERWARE LOSS"><Details pairs={Object.entries(vm.background.derived.cyberware_generation_humanity_losses||{}).map(([k,v])=>[k,`−${v} HL`])}/></Panel></div>
  </div>
 }
-function Contacts({vm}) {
- const people=[...vm.family.map(p=>({...p,type:'FAMILY'})),...vm.friends.map(p=>({...p,type:'PERSONAL'}))]
- return <div className="content-grid"><Panel className="span-8" label="RELATIONSHIPS" right={<Tag>{people.length} KNOWN</Tag>}><div className="contacts">{people.map(p=><div className="contact" key={p.id}><div className="contact-avatar"><UserRound size={24}/></div><div><div className="contact-head"><strong>{p.name}</strong><Tag>{p.type}</Tag></div><div className="subtle smaller">{fmt(p.relation||p.role)} · {fmt(p.work)}</div><div className="contact-location">{fmt(p.location||p.whereabouts,'Location unconfirmed')}</div></div></div>)}</div></Panel>
- <div className="span-4 stacked"><Panel label="COMPANY SUPPORT"><div className="callout-icon"><BriefcaseBusiness/></div><div className="section-main">ASSIGNED DRIVER</div><p className="subtle smaller">{cleanUnknown(vm.driver.name)}</p><Details pairs={[["Loyalty",fmt(vm.driver.loyalty)],["Vehicle","Company-owned groundcar"],["Role","Driver · Transport support"]]}/><p className="footnote">Loyalty 7 is an approved fixed starting value, not a verified dice roll. NPC acts independently.</p></Panel></div></div>
-}
 function Records({vm}) {
  const b=vm.background
  return <div className="content-grid"><Panel className="span-8" label="LIFEPATH LOG"><div className="record-list"><div><span>ORIGIN</span><p>{fmt(b.original_family_background)}</p></div><div><span>CHILDHOOD</span><p>{fmt(b.childhood_environment)}</p></div><div><span>FAMILY HISTORY</span><p>{fmt(b.family_crisis)}</p></div><div><span>RELATIONSHIP</span><p>{fmt(b.relationship_milestones)}</p></div><div><span>CAREER</span><p>{fmt(b.career_transition)}</p></div><div><span>MOVE TO NIGHT CITY</span><p>{fmt(b.move_to_night_city)}</p></div></div></Panel>
  <div className="span-4 stacked"><Panel label="CHECKPOINT"><div className="hero-numeric">R{vm.revision}</div><div className="subtle smaller">Canonical checkpoint revision</div><div className="panel-separator"/><Details pairs={[["Campaign","CPR-HELIX-LAST-LIGHT-001"],["IP",vm.ip],["Last fictional date",formatDate(vm.date)],["Current time",vm.time]]}/></Panel><Panel label="CAMPAIGN NOTES"><div className="record-list">{vm.knowledge.length?vm.knowledge.map((line,i)=><div key={i}><p>{line}</p></div>):<ListEmpty/>}</div><p className="footnote">Only facts Nathan knows are visible here. No unrevealed NPC truths or future plots.</p></Panel></div></div>
 }
-const pages={overview:Overview,skills:Skills,inventory:Inventory,cyberware:Cyberware,contacts:Contacts,records:Records}
+const pages={overview:Overview,skills:Skills,inventory:Inventory,agent:AgentHub,combat:CombatPage,exec:ExecPage,contacts:ContactsPage,npcs:KnownNpcsPage,cyberware:Cyberware,records:Records}
 function EmptyState({onConnect, onSelectLocal,loading,configured,error,hasToken,openPicker}) {
  return <div className="empty-shell"><div className="empty-diamond"><LockKeyhole size={30}/></div><div className="overline">SECURE PERSONNEL ACCESS // DRIVE VAULT</div><h2>PRIVATE DOSSIER ACCESS</h2><p>The viewer never stores your character in GitHub. Authorize your Google account to read the player-only projection, or inspect a local export without uploading it.</p>
  <div className="empty-actions"><button className="btn primary" disabled={!configured||loading} onClick={onConnect}><Cloud size={16}/>{loading?'AUTHENTICATING…':hasToken?'Reconnect Google':'Connect Google Drive'}<ArrowRight size={15}/></button><button className="btn outline" onClick={onSelectLocal}><ArrowDownToLine size={16}/>Open local export</button></div>
@@ -145,6 +145,10 @@ function EmptyState({onConnect, onSelectLocal,loading,configured,error,hasToken,
 function App(){
  const [tab,setTab]=useState('overview')
  const [navOpen,setNavOpen]=useState(false)
+ const [syncOpen,setSyncOpen]=useState(false)
+ const [rollRequest,setRollRequest]=useState(null)
+ const [historyOpen,setHistoryOpen]=useState(false)
+ const [rollHistory,setRollHistory]=useState(()=>readRollLog(browserStorage()))
  const [initialCache]=useState(()=>readCachedPlayerSheet(browserStorage(),config.expectedPlayerFileId))
  const [sheet,setSheet]=useState(initialCache?.sheet??null)
  const [token,setToken]=useState('')
@@ -212,27 +216,39 @@ function App(){
    clearCachedPlayerSheet(browserStorage())
    tokenRef.current='';setToken('');setSheet(null);setMode('disconnected');setLastFetched(null);setError('')
  }
+ const saveLocalRoll=(roll)=>setRollHistory(previous=>{const next=[roll,...previous].slice(0,30);writeRollLog(browserStorage(),next);return next})
+ const deleteRollHistory=()=>{clearRollLog(browserStorage());setRollHistory([])}
+ const goToPage=(id)=>{setTab(id);setNavOpen(false);setSyncOpen(false);window.scrollTo?.({top:0,behavior:'instant'})}
+ useEffect(()=>{
+   if(!rollRequest&&!historyOpen&&!syncOpen)return
+   const onKey=e=>{if(e.key==='Escape'){setRollRequest(null);setHistoryOpen(false);setSyncOpen(false)}}
+   document.addEventListener('keydown',onKey)
+   return ()=>document.removeEventListener('keydown',onKey)
+ },[rollRequest,historyOpen,syncOpen])
  const CurrentPage=pages[tab]||Overview
+ const activeTab=agentSubs.has(tab)?'agent':tab
  return <div className="app">
   <aside className={'sidebar '+(navOpen?'sidebar-open':'')}>
    <div className="brand"><Logo/><div><div className="brand-title">HELIX <span>MERIDIAN</span></div><div className="brand-sub">CORPORATE SYSTEMS / N.C.</div></div><button className="mobile-close icon-button" onClick={()=>setNavOpen(false)} aria-label="Close menu"><X size={20}/></button></div>
    <div className="sidebar-line"/>
    <div className="side-kicker">PERSONNEL DATABASE</div>
-   <nav aria-label="Character dossier sections">{nav.map(([id,label,Icon],i)=><button key={id} className={'nav-link '+(tab===id?'selected':'')} onClick={()=>{setTab(id);setNavOpen(false)}}><Icon size={18} strokeWidth={1.7}/><span>{label}</span>{tab===id&&<ChevronRight size={15} className="nav-chevron"/>}</button>)}</nav>
+   <nav aria-label="Character dossier sections">{nav.map(([id,label,Icon],i)=><button key={id} className={'nav-link '+(activeTab===id?'selected':'')} onClick={()=>goToPage(id)}><Icon size={18} strokeWidth={1.7}/><span>{label}</span>{tab===id&&<ChevronRight size={15} className="nav-chevron"/>}</button>)}</nav>
    <div className="sidebar-spacer"/>
    <div className="sidebar-info"><div className="side-kicker">DATA CONNECTION</div><div className="connection-line"><i className={'connection-led '+(mode==='drive'?'on':'')}/>{mode==='drive'?'DRIVE CONNECTED':mode==='cached'?'SAVED OFFLINE COPY':mode==='local'?'LOCAL EXPORT':'NOT CONNECTED'}</div><p>PLAYER-ONLY PROJECTION</p><div className="build-id">CPR // LAST LIGHT</div></div>
   </aside>
   <div className="main-region">
-   <header className="topbar"><div className="top-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={()=>setNavOpen(true)}><Menu/></button><span className="breadcrumb">SYSTEM <ChevronRight size={12}/> PERSONNEL <ChevronRight size={12}/><b>{tab.toUpperCase()}</b></span></div><div className="top-actions"><Tag accent={mode==='drive'}>{mode==='drive'?'DRIVE LOADED':mode==='cached'?'OFFLINE COPY':mode==='local'?'OFFLINE VIEW':'PRIVATE ACCESS'}</Tag>{token&&<button className="icon-button" onClick={picker} title="Select another Drive file"><Cloud size={18}/></button>}{token&&<button className="icon-button" onClick={()=>refresh(fileId)} disabled={busy} title="Refresh player sheet"><RefreshCcw size={18} className={busy?'spinning':''}/></button>}{token&&<button className="icon-button" onClick={signOut} title="Sign out and erase offline copy"><LogOut size={18}/></button>}</div></header>
-   <main className="main-body"><div className="section-header"><div><div className="overline">CASE FILE / {tab==='overview'?'IDENTITY & CAPABILITIES':tab.toUpperCase()}</div><h1>{vm?vm.name:'Executive Dossier'}<span className="header-period">.</span></h1><p>Restricted personnel terminal <span className="header-sep">/</span> {vm?`${vm.employer} · ${vm.department}`:'Authorized access required'}</p></div><div className="sheet-stamp"><div>{vm?`REVISION ${String(vm.revision).padStart(3,'0')}`:'SECURITY LEVEL 04'}</div><span>{vm?`${formatDate(vm.date)} / ${vm.time}`:'DRIVE AUTH REQUIRED'}</span></div></div>
-    {vm&&mode==='cached'&&<div className="cache-status-banner" role="status"><CloudOff size={21}/><div className="cache-status-copy"><strong>Saved offline snapshot · R{vm.revision}</strong><span>Last downloaded {lastFetched?.toLocaleString()||'at an unknown time'}. This might be outdated until you sync with Drive.</span></div><button className="btn primary" onClick={connect} disabled={!cfgReady||busy}>{busy?'CONNECTING…':'Connect & refresh'}</button><button className="cache-clear-btn" onClick={removeOfflineCopy}>Remove offline copy</button></div>}
-    {vm&&mode==='drive'&&offlineCopyEnabled&&<div className="cache-inline-controls"><span>Latest Drive data loaded · R{vm.revision}</span><button className="cache-clear-btn" onClick={removeOfflineCopy}>Remove saved offline copy</button></div>}
-    {vm&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="EUROBUCKS" value={vm.credits} Icon={Wallet} hint="LIQUID BALANCE"/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
-    {error&&vm&&<div className="alert error-alert top-error">{error}</div>}
-    {vm?<CurrentPage vm={vm}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
+   <header className="topbar"><div className="top-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={()=>setNavOpen(true)}><Menu/></button>{agentSubs.has(tab)&&<button className="icon-button subpage-back" title="Back to Agent" aria-label="Back to Agent" onClick={()=>goToPage('agent')}><ArrowLeft size={18}/></button>}<span className="breadcrumb">SYSTEM <ChevronRight size={12}/> PERSONNEL <ChevronRight size={12}/><b>{allPageTitles[tab]?.toUpperCase()||'OVERVIEW'}</b></span></div>
+    <div className="top-actions"><div className="sync-anchor"><button className={'sync-toggle icon-button '+(mode==='cached'?'sync-is-cached':mode==='drive'?'sync-is-drive':'')} title="Drive sync and offline settings" aria-label={mode==='cached'?'Offline snapshot: open sync controls':mode==='drive'?'Drive data loaded: open sync controls':'Open Drive connection settings'} aria-expanded={syncOpen} onClick={()=>setSyncOpen(v=>!v)}>{mode==='cached'?<CloudOff size={19}/>:<Cloud size={19}/>}<i className="sync-indicator"/></button>
+    {syncOpen&&<><button className="sync-dismiss" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}/><section className="sync-popover" role="dialog" aria-label="Character sync status"><div className="sync-popover-head"><strong>{mode==='cached'?'Offline snapshot':mode==='drive'?'Drive data loaded':mode==='local'?'Local file loaded':'Drive connection'}</strong><button className="icon-button" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}><X size={16}/></button></div><p>{vm?`Revision ${vm.revision} · ${mode==='cached'?'Stored locally; may be outdated.':mode==='drive'?'Loaded from private Drive.':'Not synchronized.'}`:'Sign in to load your private player sheet.'}</p>{lastFetched&&<small>Last download: {lastFetched.toLocaleString()}</small>}{error&&<div className="sync-error">{error}</div>}<button className="btn primary sync-main-action" onClick={()=>{setSyncOpen(false);if(tokenRef.current&&fileId){refresh(fileId)}else connect()}} disabled={!cfgReady||busy}>{busy?'Working…':token?'Refresh from Drive':'Connect & refresh'}<RefreshCcw size={16}/></button>{token&&<button className="sync-menu-link" onClick={()=>{setSyncOpen(false);picker()}}>Select player file with Picker</button>}{vm&&mode!=='local'&&<button className="sync-menu-link" onClick={()=>{removeOfflineCopy();setSyncOpen(false)}}>Remove offline copy</button>}{token&&<button className="sync-menu-link" onClick={()=>{signOut();setSyncOpen(false)}}>Sign out</button>}<p className="sync-warning">Local copy is not guaranteed current. The canonical campaign remains in private Drive.</p></section></>}</div></div></header>
+   <main className="main-body"><div className="section-header"><div><div className="overline">CASE FILE / {tab==='overview'?'IDENTITY & CAPABILITIES':(allPageTitles[tab]||tab).toUpperCase()}</div><h1>{vm?(tab==='overview'?vm.name:allPageTitles[tab]):'Executive Dossier'}<span className="header-period">.</span></h1><p>Restricted personnel terminal <span className="header-sep">/</span> {vm?`${tab==='overview'?vm.employer:vm.name} · ${vm.department}`:'Authorized access required'}</p></div><div className="sheet-stamp"><div>{vm?`REVISION ${String(vm.revision).padStart(3,'0')}`:'SECURITY LEVEL 04'}</div><span>{vm?`${formatDate(vm.date)} / ${vm.time}`:'DRIVE AUTH REQUIRED'}</span></div></div>
+    {vm&&tab==='overview'&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="EUROBUCKS" value={vm.credits} Icon={Wallet} hint="LIQUID BALANCE"/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
+    {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
    </main>
    <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
   </div>
+  <nav className="mobile-bottom-nav" aria-label="Main character pages">{nav.map(([id,label,Icon])=><button key={id} className={activeTab===id?'is-active':''} aria-current={activeTab===id?'page':undefined} onClick={()=>goToPage(id)}><Icon size={20} strokeWidth={2}/><span>{label}</span></button>)}</nav>
+  <RollDialog request={rollRequest} onClose={()=>setRollRequest(null)} onSave={saveLocalRoll}/>
+  {historyOpen&&<RollHistoryDialog history={rollHistory} onClose={()=>setHistoryOpen(false)} onClear={deleteRollHistory}/>}
   <input ref={inputRef} type="file" accept=".json,application/json" hidden onChange={importLocal}/>
   {navOpen&&<button className="mobile-shade" aria-label="Close menu" onClick={()=>setNavOpen(false)}/>}
  </div>

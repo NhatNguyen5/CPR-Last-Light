@@ -27,3 +27,13 @@ test('canonical save cannot be loaded into the viewer',()=>{
 test('rejects cross-campaign projections',()=>{
  assert.throws(()=>projectPlayer({...sample,campaign:{id:'other'}}),/Wrong campaign/)
 })
+
+test('introduced known NPCs project only explicitly visible fields; no prepared NPC leakage',()=>{
+ const known={id:'seen',name:'Known coworker',role:'Engineer',description:'Observed at work',contact_known:true,visibility:'player-known',known_to_pc:true,secret:'Do not export'}
+ const hidden={id:'hidden',name:'Unknown operative',visibility:'gm-only',known_to_pc:false,secret:'Hide me'}
+ const p=projectPlayer({...sample,people_and_relationships:{player_known_npcs:[known,hidden]}})
+ assert.equal(p.family_and_connections.known_npcs.length,1)
+ assert.equal(p.family_and_connections.known_npcs[0].name,'Known coworker')
+ assert.ok(!JSON.stringify(p).includes('Do not export'))
+ assert.ok(!JSON.stringify(p).includes('Unknown operative'))
+})

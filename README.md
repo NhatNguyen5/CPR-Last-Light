@@ -100,3 +100,14 @@ npm run preview
 ```
 
 Maintained for Campaign Red. All character history and the 2045 fictional clock remain unchanged by website maintenance.
+
+## Mobile navigation, player-known NPCs, and local dice
+
+- The mobile viewer uses six persistent bottom tabs: **Bio**, **Skills**, **Gear**, **Agent**, **Combat**, **Exec**. The Agent tab opens the **Contacts**, **Known NPCs**, **Records**, and **Cyberware** subpages; desktop retains a sidebar.
+- The offline/sync warning is condensed into a top-right cloud icon. Open it to see the current source (Drive vs offline), revision and last download, to connect/refresh, pick a Drive file, or delete the offline cache. A cached snapshot is never claimed to be the authoritative or latest Drive version.
+- Contacts and Known NPCs include only family, friends, and explicitly player-visible introduced NPCs from `PLAYER_SHEET.json`. Unknown driver/boss identities and scenario-prepared NPCs are never inserted by the viewer.
+- The projection generator can include future canonical `people_and_relationships.player_known_npcs` entries **only** if each record is marked `visibility: "player-known"` and `known_to_pc: true`. Only approved descriptive fields are copied; no private/GM narrative notes are transferred.
+- The roll terminal is available from trained Skill Base buttons and the Combat page. It uses browser `crypto.getRandomValues` and rejection sampling for unbiased results. Cyberpunk RED Skill checks apply one additional d10 (added on natural 10, subtracted on natural 1; no recursive criticals); Initiative uses REF + 1d10; damage dice are summed normally. A provided DV is informational and checked using the strict `roll > DV` rule.
+- Roll results, modifiers, and timestamps stay in a **local browser-only history** (latest 30), separate from cached character data and from the private campaign save. Clicking Roll does **not** move in-world time, count ammunition, harm characters, grant IP, adjudicate a check, or commit a GM campaign event. Use Copy Result when sharing a consequential roll with the GM. Clearing history affects only this browser.
+
+**Privacy caution:** offline snapshots and roll history are saved in browser `localStorage` for convenience. Avoid using them on shared devices, and use the app's clear controls when needed. Google OAuth tokens remain memory-only, never persisted in localStorage or GitHub.

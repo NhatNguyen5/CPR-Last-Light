@@ -20,6 +20,7 @@ const ITEM_KEYS=['id','name','owner_id','quantity','condition','custody_or_locat
 const DRIVER_KEYS=['id','name','class','cover_job','status','stats','derived','loyalty','loyalty_provenance','stats_provenance','company_vehicle_id','equipment_ids','cyberware_package','skills_at_rank_2','skills_at_rank_4','skills_at_rank_6','standard_company_policies']
 const FAMILY_KEYS=['id','name','relation','age','education','living','location','work','children_with_nathan','relationship_history','personality']
 const CONTACT_KEYS=['id','name','role','work','last_contact','whereabouts','attitude_or_shared_history']
+const KNOWN_NPC_KEYS=['id','name','role','relationship','work','location','whereabouts','description','last_contact','contact_known']
 const HOUSING_KEYS=['area','first_month_paid_by_creation_rule','home_neighborhood_local_expert','housing_type','monthly_cost_eb','monthly_lifestyle','next_lifestyle_due_fictional_date','ownership','rent_due_eb','residents','unconfirmed']
 const OBLIGATION_KEYS=['housing_and_lifestyle','professional_employment']
 const OBLIGATION_ARRAY_KEYS=['accepted_jobs','debt','family_support_promises','offered_jobs_to_pc','player_contracts']
@@ -62,6 +63,8 @@ export function projectPlayer(canonical) {
     family_and_connections:{
       player_known_family:(rel.player_known_family||[]).map(p=>pick(p,FAMILY_KEYS)),
       personal_connections:(rel.personal_connections||[]).map(p=>pick(p,CONTACT_KEYS)),
+      // Future introduced NPCs are explicitly marked both player-known and known-to-PC.
+      known_npcs:(rel.player_known_npcs||[]).filter(p=>p?.visibility==='player-known'&&p?.known_to_pc===true).map(p=>pick(p,KNOWN_NPC_KEYS)),
       helix_staff:{
         boss:pick(rel.helix_staff?.boss,['name','relationship']),
         assigned_driver_id:rel.helix_staff?.assigned_driver_id,

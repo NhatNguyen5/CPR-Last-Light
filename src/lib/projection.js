@@ -50,6 +50,7 @@ export function getViewModel(data) {
     ammo: data.equipment_and_property?.ammo_state || {},
     family: data.family_and_connections?.player_known_family || [],
     friends: data.family_and_connections?.personal_connections || [],
+    knownNpcs: data.family_and_connections?.known_npcs || [],
     driver: data.company_driver || {},
     background: pc,
     housing: data.housing_and_lifestyle || {},
