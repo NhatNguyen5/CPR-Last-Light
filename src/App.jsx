@@ -151,7 +151,7 @@ function App(){
  const [needsConsent,setNeedsConsent]=useState(false)
  const [offlineCopyEnabled,setOfflineCopyEnabled]=useState(true)
  const [sdkReady,setSdkReady]=useState(false)
- const [fileId,setFileId]=useState(()=>{try{return localStorage.getItem(FILE_KEY)||config.expectedPlayerFileId}catch{return config.expectedPlayerFileId}})
+ const [fileId,setFileId]=useState(()=>activeProfile.fileId||'')
  const [lastFetched,setLastFetched]=useState(initialCache?new Date(initialCache.savedAt):null)
  const tokenRef=useRef('')
  const tokenClientRef=useRef(null)
