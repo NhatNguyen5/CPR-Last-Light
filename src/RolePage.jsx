@@ -12,7 +12,7 @@ const display=value=>{
 }
 export function RolePage({vm,onNavigate}) {
  const role=vm.role||'Unspecified'
- if(role==='Exec')return <ExecPage vm={vm} onNavigate={onNavigate}/>
+ if(role==='Exec'&&vm.campaignId==='CPR-HELIX-LAST-LIGHT-001'&&vm.characterId==='CPR-HELIX-PC-001')return <ExecPage vm={vm} onNavigate={onNavigate}/>
  const Icon=icons[role]||UserRound
  const ability=vm.roleAbility||RED_ROLES[role]||'Role Ability'
  const details=Object.entries(vm.roleData||{}).map(([key,value])=>[key,display(value)]).filter(([,value])=>value!==null)
