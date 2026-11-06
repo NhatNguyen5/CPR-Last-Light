@@ -55,10 +55,10 @@ export function readRollLog(storage,scope='') {
     return Array.isArray(raw)?raw.filter(x=>x&&['check','initiative','damage','facedown'].includes(x.kind)&&Number.isFinite(x.total)).slice(0,30):[]
   }catch{return []}
 }
-export function writeRollLog(storage, records) {
-  try{storage?.setItem(ROLL_LOG_KEY,JSON.stringify(records.slice(0,30)));return true}catch{return false}
+export function writeRollLog(storage, records,scope='') {
+  try{storage?.setItem(rollLogKey(scope),JSON.stringify(records.slice(0,30)));return true}catch{return false}
 }
-export function clearRollLog(storage){try{storage?.removeItem(ROLL_LOG_KEY);return true}catch{return false}}
+export function clearRollLog(storage,scope=''){try{storage?.removeItem(rollLogKey(scope));return true}catch{return false}}
 
 export function describeRoll(roll) {
   if (!roll) return ''
