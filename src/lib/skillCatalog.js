@@ -44,7 +44,11 @@ function makeRow(fullName,label,stat,level,currentStats,parent=null) {
   const rank = finiteLevel(level)
   return {
     name:fullName,label,parent,stat,statValue,level:rank,
-    base:rank > 0 && statValue !== null ? statValue + rank : null,
+    // Level 0 is an ordinary untrained check: STAT + 0. A missing linked
+    // STAT is not guessed. Unspecialized parent rows require the GM to
+    // identify a particular topic before the player attempts a roll.
+    base:statValue !== null ? statValue + rank : null,
+    requiresSpecialization:rank === 0 && !parent && specialized.has(fullName),
     doubleCost:x2.has(parent || fullName),
     trained:rank > 0,
     aboveNormalMax:rank > SKILL_MAX_LEVEL,

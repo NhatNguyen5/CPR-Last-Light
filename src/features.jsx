@@ -123,17 +123,20 @@ export function CombatPage({vm,onRoll,history,onShowHistory}) {
 export function RollDialog({request,onClose,onSave}) {
  const [modifier,setModifier]=useState('0')
  const [dv,setDv]=useState('')
+ const [specialization,setSpecialization]=useState('')
  const [result,setResult]=useState(null)
  const [error,setError]=useState('')
- useEffect(()=>{setModifier('0');setDv('');setResult(null);setError('')},[request])
+ useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setResult(null);setError('')},[request])
  if(!request)return null
  const roll=()=>{
   const m=Number(modifier||0)
   if(!Number.isInteger(m)||Math.abs(m)>100){setError('Enter an integer modifier between -100 and 100.');return}
+  if(request.requiresSpecialization&&!specialization.trim()){setError('Name the specific subject, language, style, or field before rolling.');return}
   const parsedDv=dv.trim()===''?null:Number(dv)
   if(parsedDv!==null&&(!Number.isInteger(parsedDv)||parsedDv<0||parsedDv>100)){setError('Enter a DV from 0 to 100, or leave it blank.');return}
   try{
-   const data=request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:request.label,count:request.count,sides:request.sides,modifier:m}):rollRedCheck({label:request.label,base:request.base,modifier:m})
+   const rollLabel=request.requiresSpecialization?`${request.label} (${specialization.trim()})`:request.label
+   const data=request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:rollLabel,count:request.count,sides:request.sides,modifier:m}):rollRedCheck({label:rollLabel,base:request.base,modifier:m})
    const recorded={...data,dv:parsedDv,at:Date.now()}
    setResult(recorded);setError('');onSave(recorded)
   }catch(e){setError(e.message||String(e))}
@@ -143,7 +146,7 @@ export function RollDialog({request,onClose,onSave}) {
  <section className="dossier-card dice-card" role="dialog" aria-modal="true" aria-labelledby="dice-title">
   <div className="dossier-top"><span className="micro-label">LOCAL DICE TERMINAL</span><button className="icon-button" onClick={onClose} aria-label="Close roller"><X size={19}/></button></div>
   <h2 id="dice-title">{request.label}</h2><p className="subtle smaller">{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='initiative'?'REF + 1d10 (no Skill critical explosion)':'STAT + Skill + 1d10'}</p>
-  {!result?<><div className="roll-fields"><label>Situational modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Situational modifier"/></label>{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
+  {!result?<>{request.untrained&&<p className="untrained-note">Untrained attempt: Skill Level 0. Whether this task is possible without specific training, equipment, or knowledge is for the GM to decide.</p>}{request.requiresSpecialization&&<label className="specialization-label">Specific field / language / style<input type="text" value={specialization} maxLength={100} onChange={e=>setSpecialization(e.target.value)} placeholder="Name the attempted specialization" aria-label="Attempted specialization"/></label>}<div className="roll-fields"><label>Situational modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Situational modifier"/></label>{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
   <div className="roll-base-display">{request.kind==='damage'?'Dice pool':`Base ${request.base}`} <strong>{request.kind==='damage'?`${request.count}d${request.sides}`:`+${request.base}`}</strong></div>
   <button className="btn primary roll-now" onClick={roll}><Dices size={21}/> Roll dice</button></>:
   <div className="roll-result"><div className="dice-total">{result.total}</div><div className="micro-label">{result.critical?`CRITICAL ${result.critical.toUpperCase()}`:result.kind==='damage'?'DAMAGE TOTAL':'TOTAL ROLL'}</div>

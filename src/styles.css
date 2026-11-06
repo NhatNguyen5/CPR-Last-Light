@@ -173,3 +173,57 @@
 .skill-stat-strip span{font:10px 'IBM Plex Mono',monospace;color:#83bba2;letter-spacing:.1em}
 .skill-stat-strip strong{font:600 21px 'Space Grotesk',sans-serif;color:#e0f7e7}
 @media(max-width:760px){.skill-stat-strip>div{min-width:56px;padding:9px 5px}.skill-stat-strip strong{font-size:19px}.skill-stat-strip span{font-size:9px}}
+
+
+/* November 2026 usability refinements: source-authenticated company badge,
+   persistent balance, no hamburger, and every attribute visible on mobile. */
+.topbar{position:sticky;top:0;z-index:60;background:#0d181c;box-shadow:0 4px 18px #050c0e88}
+.top-left{display:flex;align-items:center;min-width:0;gap:13px}
+.topbar-brand{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.topbar-brand-name{font:700 12px 'Space Grotesk',sans-serif;letter-spacing:.08em;white-space:nowrap}
+.topbar-brand-name b{font-weight:700;color:#b0e7d2}
+.helix-logo{width:40px;height:40px;display:block;flex:0 0 auto;transform:none;border:0;background:none}
+.brand .helix-logo{width:42px;height:42px}
+.wallet-chip{display:flex;gap:7px;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid #3d6554;background:#19352c;color:#b9f4d5;min-height:40px;padding:0 13px;font:600 14px 'IBM Plex Mono',monospace;white-space:nowrap}
+.wallet-chip svg{color:#8cc5a7}
+.metric-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.skill-stat-strip{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));overflow:visible}
+.skill-stat-strip>div{min-width:0;flex:auto}
+.skill-roll-button--untrained{background:#172923;border-color:#3a554a;color:#a3c8b2}
+.skill-roll-button--untrained:hover,.skill-roll-button--untrained:focus-visible{color:#d4f4dd;background:#224335}
+.skill-table-row.untrained .skill-table-base{color:#a3c8b2}
+.untrained-note{font-size:12px;line-height:1.55;color:#e2bc86;border-left:3px solid #d3a16c;padding:8px 12px;margin:18px 0 10px;background:#31261d80}
+.specialization-label{display:block;margin:17px 0 4px;font:11px 'IBM Plex Mono',monospace;color:#96c3ac}
+.specialization-label input{width:100%;margin-top:7px;padding:11px;border:1px solid #4a6e61;background:#152b27;color:#e7f5ed;outline:none}
+.specialization-label input:focus{border-color:#b2ebce}
+@media(max-width:1150px){.topbar-brand-name{display:none}}
+@media(max-width:760px){
+ .sidebar{display:none!important}
+ .topbar{padding:0 13px;gap:9px}
+ .top-left{gap:7px}
+ .topbar-brand-name{display:flex;flex-direction:column;gap:1px;font-size:10px;line-height:1.05;letter-spacing:.07em}
+ .topbar-brand-name b{display:block}
+ .topbar .breadcrumb{display:none}
+ .topbar-brand .helix-logo{width:37px;height:37px}
+ .wallet-chip{min-height:37px;padding:0 9px;gap:5px;font-size:12px}
+ .wallet-chip svg{width:13px;height:13px}
+ .sync-toggle{height:37px;width:37px}
+ .skill-stat-strip{grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}
+ .skill-stat-strip>div{padding:7px 2px;min-width:0;border-right:1px solid #315044;border-bottom:1px solid #315044}
+ .skill-stat-strip>div:nth-child(5n){border-right:0}
+ .skill-stat-strip>div:nth-child(n+6){border-bottom:0}
+ .skill-stat-strip span{font-size:9px}
+ .skill-stat-strip strong{font-size:19px}
+ .metric-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .metric{min-height:118px;padding:10px}
+ .metric-top .micro-label{font-size:8px;letter-spacing:.08em}
+ .metric-value{font-size:25px}
+ .metric-value span{font-size:12px}
+ .metric-top svg{width:14px;height:14px}
+}
+@media(max-width:380px){
+ .topbar-brand-name{font-size:9px}
+ .wallet-chip{font-size:11px;padding:0 7px}
+ .topbar-brand .helix-logo{width:33px;height:33px}
+ .metric-value{font-size:22px}
+}

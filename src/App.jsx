@@ -2,7 +2,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {
   Activity, ArrowDownToLine, ArrowRight, BriefcaseBusiness, CheckCircle2, ChevronRight,
   CircleHelp, Cloud, CloudOff, Cpu, ExternalLink, FileJson2, Fingerprint, HeartPulse,
-  Home, IdCard, Layers3, LockKeyhole, LogOut, Menu, Radar, RefreshCcw, Search,
+  Home, IdCard, Layers3, LockKeyhole, LogOut, Radar, RefreshCcw, Search,
   Shield, ShieldCheck, Terminal, UserRound, UsersRound, Wallet, X, Zap, Dices, ArrowLeft,
 } from 'lucide-react'
 import {config} from './config.js'
@@ -14,6 +14,7 @@ import {readRollLog, writeRollLog, clearRollLog} from './lib/dice.js'
 import {AgentHub, ContactsPage, KnownNpcsPage, ExecPage, CombatPage, RollDialog, RollHistoryDialog} from './features.jsx'
 
 const FILE_KEY = 'cpr-last-light:player-file-id'
+const HELIX_MARK_URL = `${import.meta.env.BASE_URL}helix-mark.svg`
 const browserStorage = () => {try{return window.localStorage}catch{return null}}
 const nav = [
   ['overview','Bio',UserRound],['skills','Skills',Activity],['inventory','Gear',Shield],
@@ -29,7 +30,7 @@ const formatDate = date => {
   return new Intl.DateTimeFormat('en-US',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'))
 }
 
-function Logo({large=false}) {return <div className={'helix-logo'+(large?' helix-logo--large':'')} aria-hidden="true"><span>H</span><i /></div>}
+function Logo({large=false}) {return <img className={'helix-logo'+(large?' helix-logo--large':'')} src={HELIX_MARK_URL} alt="Helix Meridian emblem — proposed visual identity"/>}
 function Tag({children,accent=false}) {return <span className={'tag '+(accent?'tag-accent':'')}>{children}</span>}
 function Panel({children,className='',label='',right}) {return <section className={'panel '+className}>{(label||right)&&<div className="panel-heading"><div className="micro-label">{label}</div>{right}</div>}{children}</section>}
 function StatBar({value,max,warning=false}) {const n=max>0?Math.max(0,Math.min(100,100*value/max)):0;return <div className="meter-track" aria-label={`${value} of ${max}`}><div className={'meter-fill'+(warning?' meter-fill-warning':'')} style={{width:`${n}%`}} /></div>}
@@ -95,12 +96,12 @@ function Skills({vm,onRoll}) {
             <div className="skill-table-name" title={row.name}>{row.parent&&<small>{row.parent}</small>}<span>{row.label}</span>{row.doubleCost&&<em title="Costs twice as many improvement points">×2</em>}</div>
             <div className="skill-table-level"><strong>{row.level}</strong><SkillBar level={row.level}/>{row.aboveNormalMax&&<small className="skill-overcap">CHECK</small>}</div>
             <div className="skill-table-stat" title={row.stat||'Linked STAT not established'}><strong>{row.statValue??'—'}</strong><small>{row.stat||'?'}</small></div>
-            <div className="skill-table-base">{row.trained&&row.base!==null?<button className="skill-roll-button" type="button" title={`Roll ${row.name}: +${row.base}`} aria-label={`Roll ${row.name}, base ${row.base}`} onClick={()=>onRoll({kind:'check',label:row.name,base:row.base,stat:row.stat,rank:row.level})}><Dices size={12}/> +{row.base}</button>:<span>—</span>}</div>
+            <div className="skill-table-base">{row.base!==null?<button className={'skill-roll-button'+(!row.trained?' skill-roll-button--untrained':'')} type="button" title={`${row.trained?'Roll':'Untrained attempt'} ${row.name}: +${row.base}`} aria-label={`${row.trained?'Roll':'Untrained roll'} ${row.name}, base ${row.base}`} onClick={()=>onRoll({kind:'check',label:row.name,base:row.base,stat:row.stat,rank:row.level,untrained:!row.trained,requiresSpecialization:row.requiresSpecialization})}><Dices size={12}/> +{row.base}</button>:<span title="Cannot calculate without a known linked STAT">—</span>}</div>
           </div>)}
         </section>)}
       </div>
       {!groups.length&&<ListEmpty text="No skills match those filters."/>}
-      <p className="footnote">Skill Level normally tops out at 10 (starting cap 6). Trained Base = current linked STAT + Skill Level, before any modifiers or 1d10 roll. Untrained entries are shown as Level 0 with no trained Base; a GM determines whether an untrained check is allowed. ×2 Skills cost twice as many improvement points. This view never modifies Nathan's saved Skills.</p>
+      <p className="footnote">Skill Level normally tops out at 10 (starting cap 6). Base = current linked STAT + Skill Level, including Level 0 (untrained) checks. For unspecified specializations, name the subject in the roll dialog. Your GM decides whether training, tools, or other prerequisites are required. ×2 Skills cost twice as many improvement points. Rolls never modify Nathan's saved Skills.</p>
     </Panel>
   </div>
 }
@@ -144,7 +145,6 @@ function EmptyState({onConnect, onSelectLocal,loading,configured,error,hasToken,
 }
 function App(){
  const [tab,setTab]=useState('overview')
- const [navOpen,setNavOpen]=useState(false)
  const [syncOpen,setSyncOpen]=useState(false)
  const [rollRequest,setRollRequest]=useState(null)
  const [historyOpen,setHistoryOpen]=useState(false)
@@ -218,7 +218,7 @@ function App(){
  }
  const saveLocalRoll=(roll)=>setRollHistory(previous=>{const next=[roll,...previous].slice(0,30);writeRollLog(browserStorage(),next);return next})
  const deleteRollHistory=()=>{clearRollLog(browserStorage());setRollHistory([])}
- const goToPage=(id)=>{setTab(id);setNavOpen(false);setSyncOpen(false);window.scrollTo?.({top:0,behavior:'instant'})}
+ const goToPage=(id)=>{setTab(id);setSyncOpen(false);window.scrollTo?.({top:0,behavior:'instant'})}
  useEffect(()=>{
    if(!rollRequest&&!historyOpen&&!syncOpen)return
    const onKey=e=>{if(e.key==='Escape'){setRollRequest(null);setHistoryOpen(false);setSyncOpen(false)}}
@@ -228,8 +228,8 @@ function App(){
  const CurrentPage=pages[tab]||Overview
  const activeTab=agentSubs.has(tab)?'agent':tab
  return <div className="app">
-  <aside className={'sidebar '+(navOpen?'sidebar-open':'')}>
-   <div className="brand"><Logo/><div><div className="brand-title">HELIX <span>MERIDIAN</span></div><div className="brand-sub">CORPORATE SYSTEMS / N.C.</div></div><button className="mobile-close icon-button" onClick={()=>setNavOpen(false)} aria-label="Close menu"><X size={20}/></button></div>
+  <aside className="sidebar">
+   <div className="brand"><Logo/><div><div className="brand-title">HELIX <span>MERIDIAN</span></div><div className="brand-sub">CORPORATE SYSTEMS / N.C.</div></div></div>
    <div className="sidebar-line"/>
    <div className="side-kicker">PERSONNEL DATABASE</div>
    <nav aria-label="Character dossier sections">{nav.map(([id,label,Icon],i)=><button key={id} className={'nav-link '+(activeTab===id?'selected':'')} onClick={()=>goToPage(id)}><Icon size={18} strokeWidth={1.7}/><span>{label}</span>{tab===id&&<ChevronRight size={15} className="nav-chevron"/>}</button>)}</nav>
@@ -237,11 +237,11 @@ function App(){
    <div className="sidebar-info"><div className="side-kicker">DATA CONNECTION</div><div className="connection-line"><i className={'connection-led '+(mode==='drive'?'on':'')}/>{mode==='drive'?'DRIVE CONNECTED':mode==='cached'?'SAVED OFFLINE COPY':mode==='local'?'LOCAL EXPORT':'NOT CONNECTED'}</div><p>PLAYER-ONLY PROJECTION</p><div className="build-id">CPR // LAST LIGHT</div></div>
   </aside>
   <div className="main-region">
-   <header className="topbar"><div className="top-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={()=>setNavOpen(true)}><Menu/></button>{agentSubs.has(tab)&&<button className="icon-button subpage-back" title="Back to Agent" aria-label="Back to Agent" onClick={()=>goToPage('agent')}><ArrowLeft size={18}/></button>}<span className="breadcrumb">SYSTEM <ChevronRight size={12}/> PERSONNEL <ChevronRight size={12}/><b>{allPageTitles[tab]?.toUpperCase()||'OVERVIEW'}</b></span></div>
-    <div className="top-actions"><div className="sync-anchor"><button className={'sync-toggle icon-button '+(mode==='cached'?'sync-is-cached':mode==='drive'?'sync-is-drive':'')} title="Drive sync and offline settings" aria-label={mode==='cached'?'Offline snapshot: open sync controls':mode==='drive'?'Drive data loaded: open sync controls':'Open Drive connection settings'} aria-expanded={syncOpen} onClick={()=>setSyncOpen(v=>!v)}>{mode==='cached'?<CloudOff size={19}/>:<Cloud size={19}/>}<i className="sync-indicator"/></button>
+   <header className="topbar"><div className="top-left"><div className="topbar-brand"><Logo/><span className="topbar-brand-name">HELIX <b>MERIDIAN</b></span></div>{agentSubs.has(tab)&&<button className="icon-button subpage-back" title="Back to Agent" aria-label="Back to Agent" onClick={()=>goToPage('agent')}><ArrowLeft size={18}/></button>}<span className="breadcrumb">SYSTEM <ChevronRight size={12}/> PERSONNEL <ChevronRight size={12}/><b>{allPageTitles[tab]?.toUpperCase()||'OVERVIEW'}</b></span></div>
+    <div className="top-actions">{vm&&<div className="wallet-chip" aria-label={`Nathan's saved liquid balance: ${vm.credits} eurobucks`} title={`Saved balance, revision ${vm.revision}; not a live financial account`}><Wallet size={15}/><strong>€$ {Number(vm.credits).toLocaleString()}</strong></div>}<div className="sync-anchor"><button className={'sync-toggle icon-button '+(mode==='cached'?'sync-is-cached':mode==='drive'?'sync-is-drive':'')} title="Drive sync and offline settings" aria-label={mode==='cached'?'Offline snapshot: open sync controls':mode==='drive'?'Drive data loaded: open sync controls':'Open Drive connection settings'} aria-expanded={syncOpen} onClick={()=>setSyncOpen(v=>!v)}>{mode==='cached'?<CloudOff size={19}/>:<Cloud size={19}/>}<i className="sync-indicator"/></button>
     {syncOpen&&<><button className="sync-dismiss" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}/><section className="sync-popover" role="dialog" aria-label="Character sync status"><div className="sync-popover-head"><strong>{mode==='cached'?'Offline snapshot':mode==='drive'?'Drive data loaded':mode==='local'?'Local file loaded':'Drive connection'}</strong><button className="icon-button" aria-label="Close sync menu" onClick={()=>setSyncOpen(false)}><X size={16}/></button></div><p>{vm?`Revision ${vm.revision} · ${mode==='cached'?'Stored locally; may be outdated.':mode==='drive'?'Loaded from private Drive.':'Not synchronized.'}`:'Sign in to load your private player sheet.'}</p>{lastFetched&&<small>Last download: {lastFetched.toLocaleString()}</small>}{error&&<div className="sync-error">{error}</div>}<button className="btn primary sync-main-action" onClick={()=>{setSyncOpen(false);if(tokenRef.current&&fileId){refresh(fileId)}else connect()}} disabled={!cfgReady||busy}>{busy?'Working…':token?'Refresh from Drive':'Connect & refresh'}<RefreshCcw size={16}/></button>{token&&<button className="sync-menu-link" onClick={()=>{setSyncOpen(false);picker()}}>Select player file with Picker</button>}{vm&&mode!=='local'&&<button className="sync-menu-link" onClick={()=>{removeOfflineCopy();setSyncOpen(false)}}>Remove offline copy</button>}{token&&<button className="sync-menu-link" onClick={()=>{signOut();setSyncOpen(false)}}>Sign out</button>}<p className="sync-warning">Local copy is not guaranteed current. The canonical campaign remains in private Drive.</p></section></>}</div></div></header>
    <main className="main-body"><div className="section-header"><div><div className="overline">CASE FILE / {tab==='overview'?'IDENTITY & CAPABILITIES':(allPageTitles[tab]||tab).toUpperCase()}</div><h1>{vm?(tab==='overview'?vm.name:allPageTitles[tab]):'Executive Dossier'}<span className="header-period">.</span></h1><p>Restricted personnel terminal <span className="header-sep">/</span> {vm?`${tab==='overview'?vm.employer:vm.name} · ${vm.department}`:'Authorized access required'}</p></div><div className="sheet-stamp"><div>{vm?`REVISION ${String(vm.revision).padStart(3,'0')}`:'SECURITY LEVEL 04'}</div><span>{vm?`${formatDate(vm.date)} / ${vm.time}`:'DRIVE AUTH REQUIRED'}</span></div></div>
-    {vm&&tab==='overview'&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="EUROBUCKS" value={vm.credits} Icon={Wallet} hint="LIQUID BALANCE"/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
+    {vm&&tab==='overview'&&<div className="metric-grid"><Metric label="HIT POINTS" value={vm.hp} denominator={vm.maxHp} Icon={HeartPulse}/><Metric label="HUMANITY" value={vm.humanity} denominator={vm.maxHumanity} Icon={Activity}/><Metric label="ARMOR / BODY" value={vm.armorBody} Icon={ShieldCheck} hint={`HEAD SP ${vm.armorHead}`}/></div>}
     {vm?<CurrentPage vm={vm} onNavigate={goToPage} onRoll={setRollRequest} history={rollHistory} onShowHistory={()=>setHistoryOpen(true)}/>:<EmptyState onConnect={connect} onSelectLocal={()=>inputRef.current?.click()} loading={busy} configured={cfgReady} error={error} hasToken={Boolean(token)} openPicker={picker}/>}
    </main>
    <footer className="site-footer"><span>HELIX MERIDIAN © 2045 / FICTIONAL SETTING</span><span>{mode==='drive'?'PRIVATE DRIVE VIEW':mode==='cached'?'SAVED OFFLINE SNAPSHOT — MAY BE OUTDATED':mode==='local'?'LOCAL SNAPSHOT — NOT SYNCHRONIZED':'READ-ONLY PORTAL'} · NEVER AUTHORITATIVE</span></footer>
@@ -250,7 +250,6 @@ function App(){
   <RollDialog request={rollRequest} onClose={()=>setRollRequest(null)} onSave={saveLocalRoll}/>
   {historyOpen&&<RollHistoryDialog history={rollHistory} onClose={()=>setHistoryOpen(false)} onClear={deleteRollHistory}/>}
   <input ref={inputRef} type="file" accept=".json,application/json" hidden onChange={importLocal}/>
-  {navOpen&&<button className="mobile-shade" aria-label="Close menu" onClick={()=>setNavOpen(false)}/>}
  </div>
 }
 export default App

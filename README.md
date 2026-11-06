@@ -111,3 +111,10 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - Roll results, modifiers, and timestamps stay in a **local browser-only history** (latest 30), separate from cached character data and from the private campaign save. Clicking Roll does **not** move in-world time, count ammunition, harm characters, grant IP, adjudicate a check, or commit a GM campaign event. Use Copy Result when sharing a consequential roll with the GM. Clearing history affects only this browser.
 
 **Privacy caution:** offline snapshots and roll history are saved in browser `localStorage` for convenience. Avoid using them on shared devices, and use the app's clear controls when needed. Google OAuth tokens remain memory-only, never persisted in localStorage or GitHub.
+
+### Mobile improvements (November 2026)
+
+- The mobile menu has been retired in favor of the six-tab bottom navigation. The sticky header displays the latest saved eurobuck balance from the private player projection, alongside Drive sync status.
+- All ten current STATs fit in a two-row, five-column grid on mobile (no horizontal scrolling).
+- Core Skills at Level 0 can launch untrained `STAT + 0 + 1d10` checks. Skills whose *type* requires a chosen specialization (e.g. an unrecorded Language or Science discipline) prompt for a descriptive field before rolling. Whether a task requires training, equipment, or GM permission remains a GM ruling. No local roll commits to campaign history.
+- The logo SVG is a **proposed visual emblem** inspired by Helix Meridian's known cybertechnology and medical-technology industry. No official emblem has been established in the canonical campaign state; the site does not establish one as an in-world fact.
