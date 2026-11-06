@@ -135,4 +135,9 @@ Maintained for Campaign Red. All character history and the 2045 fictional clock 
 - Identity and HR cover title remain explicitly pending. When the campaign later establishes them and refreshes the player-only projection, the roster updates without changing site code. No actions, Loyalty checks, NPC introductions, or fictional time are triggered by opening the page.
 - **No Drive save was modified** to implement this view. The public repository contains interface code and tests only, not the private player projection or canonical campaign state.
 
-Facedown uses COOL + Reputation + 1d10 in an opposed check.
+### Facedown (November 2026)
+
+- **Combat → Facedown** opens an opposed-roll dialog. Formula: **COOL + Reputation + 1d10**; this is not a Skill Check, so it does not receive a critical follow-up die. For a defining reputation for cowardice, the Reputation modifier is negative.
+- Nathan's revision-1 player projection does **not** establish a Reputation score. Enter the GM-confirmed numeric value; the site does not assume it is zero. An opponent's **GM-supplied** total is optional and shown only for comparison; the viewer does not roll for NPCs.
+- A tie has no effect. Otherwise, the loser may back down or take **−2 on future actions against the winner** until defeating them once. No automatic penalties, fictional time, or Drive writes result from pressing the button.
+- The roll remains in this browser's local, clearable history.
