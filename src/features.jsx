@@ -180,6 +180,11 @@ export function CombatPage({vm,onRoll,history,onShowHistory}) {
    <div><strong>{c.label}</strong><span>{c.desc}</span><small>{c.stat} {human(stat[c.stat])} {c.rank?`+ Skill ${c.rank}`:''}</small></div>
    <button className="roll-trigger" onClick={()=>onRoll({kind:c.kind,label:c.label,base:Number(stat[c.stat]||0)+c.rank,stat:c.stat,rank:c.rank})}><Dices size={18}/> +{Number(stat[c.stat]||0)+c.rank}</button>
   </div>)}</div>
+  <div className="directory-heading">SOCIAL CONFRONTATION</div>
+  <div className="combat-row facedown-combat-row">
+   <div><strong>Facedown</strong><span>Opposed · COOL + Reputation + 1d10</span><small>COOL {human(stat.COOL)} · Reputation confirmed before rolling</small></div>
+   <button className="roll-trigger" type="button" disabled={!Number.isInteger(stat.COOL)} aria-label="Open Facedown roll" onClick={()=>onRoll({kind:'facedown',label:'Facedown',cool:stat.COOL,base:stat.COOL})}><Dices size={18}/> Facedown</button>
+  </div>
   <div className="directory-heading">DAMAGE DICE</div>
   <div className="combat-row"><div><strong>Very Heavy Pistol</strong><span>4d6 damage if a hit is confirmed</span><small>No ammo, HP, or armor is changed by rolling here.</small></div><button className="roll-trigger" onClick={()=>onRoll({kind:'damage',label:'Very Heavy Pistol · 4d6 damage',count:4,sides:6})}><Dices size={18}/> 4d6</button></div>
  </section>
@@ -192,9 +197,11 @@ export function RollDialog({request,onClose,onSave}) {
  const [modifier,setModifier]=useState('0')
  const [dv,setDv]=useState('')
  const [specialization,setSpecialization]=useState('')
+ const [reputation,setReputation]=useState('')
+ const [opponentTotal,setOpponentTotal]=useState('')
  const [result,setResult]=useState(null)
  const [error,setError]=useState('')
- useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setResult(null);setError('')},[request])
+ useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setReputation('');setOpponentTotal('');setResult(null);setError('')},[request])
  if(!request)return null
  const roll=()=>{
   const m=Number(modifier||0)
@@ -202,10 +209,23 @@ export function RollDialog({request,onClose,onSave}) {
   if(request.requiresSpecialization&&!specialization.trim()){setError('Name the specific subject, language, style, or field before rolling.');return}
   const parsedDv=dv.trim()===''?null:Number(dv)
   if(parsedDv!==null&&(!Number.isInteger(parsedDv)||parsedDv<0||parsedDv>100)){setError('Enter a DV from 0 to 100, or leave it blank.');return}
+  let reputationValue=null, opposed=null
+  if(request.kind==='facedown'){
+   const rawRep=reputation.trim()
+   if(rawRep===''||!Number.isInteger(Number(rawRep))||Number(rawRep)<-10||Number(rawRep)>10){
+    setError('Enter the GM-confirmed Reputation (-10 to 10); it is not recorded in the current sheet.');return
+   }
+   reputationValue=Number(rawRep)
+   if(opponentTotal.trim()!==''){
+    const value=Number(opponentTotal)
+    if(!Number.isInteger(value)||Math.abs(value)>150){setError('Enter a GM-supplied opponent total from -150 to 150, or leave it blank.');return}
+    opposed=value
+   }
+  }
   try{
    const rollLabel=request.requiresSpecialization?`${request.label} (${specialization.trim()})`:request.label
-   const data=request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:rollLabel,count:request.count,sides:request.sides,modifier:m}):rollRedCheck({label:rollLabel,base:request.base,modifier:m})
-   const recorded={...data,dv:parsedDv,at:Date.now()}
+   const data=request.kind==='facedown'?rollFacedown({cool:request.cool,reputation:reputationValue,modifier:m}):request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:rollLabel,count:request.count,sides:request.sides,modifier:m}):rollRedCheck({label:rollLabel,base:request.base,modifier:m})
+   const recorded={...data,dv:parsedDv,opponentTotal:request.kind==='facedown'?opposed:null,at:Date.now()}
    setResult(recorded);setError('');onSave(recorded)
   }catch(e){setError(e.message||String(e))}
  }
@@ -213,15 +233,19 @@ export function RollDialog({request,onClose,onSave}) {
  return <div className="dossier-mask dice-mask" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
  <section className="dossier-card dice-card" role="dialog" aria-modal="true" aria-labelledby="dice-title">
   <div className="dossier-top"><span className="micro-label">LOCAL DICE TERMINAL</span><button className="icon-button" onClick={onClose} aria-label="Close roller"><X size={19}/></button></div>
-  <h2 id="dice-title">{request.label}</h2><p className="subtle smaller">{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='initiative'?'REF + 1d10 (no Skill critical explosion)':'STAT + Skill + 1d10'}</p>
-  {!result?<>{request.untrained&&<p className="untrained-note">Untrained attempt: Skill Level 0. Whether this task is possible without specific training, equipment, or knowledge is for the GM to decide.</p>}{request.requiresSpecialization&&<label className="specialization-label">Specific field / language / style<input type="text" value={specialization} maxLength={100} onChange={e=>setSpecialization(e.target.value)} placeholder="Name the attempted specialization" aria-label="Attempted specialization"/></label>}<div className="roll-fields"><label>Situational modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Situational modifier"/></label>{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
-  <div className="roll-base-display">{request.kind==='damage'?'Dice pool':`Base ${request.base}`} <strong>{request.kind==='damage'?`${request.count}d${request.sides}`:`+${request.base}`}</strong></div>
+  <h2 id="dice-title">{request.label}</h2><p className="subtle smaller">{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='initiative'?'REF + 1d10 (no Skill critical explosion)':request.kind==='facedown'?'COOL + Reputation + 1d10 · opposed (no Skill critical explosion)':'STAT + Skill + 1d10'}</p>
+  {!result?<>{request.untrained&&<p className="untrained-note">Untrained attempt: Skill Level 0. Whether this task is possible without specific training, equipment, or knowledge is for the GM to decide.</p>}{request.requiresSpecialization&&<label className="specialization-label">Specific field / language / style<input type="text" value={specialization} maxLength={100} onChange={e=>setSpecialization(e.target.value)} placeholder="Name the attempted specialization" aria-label="Attempted specialization"/></label>}
+ {request.kind==='facedown'&&<p className="facedown-note">Reputation is not recorded in Nathan's current player sheet. Enter a GM-confirmed value for this roll. A defining reputation for cowardice counts as negative. The GM decides when Facedowns occur.</p>}
+ <div className="roll-fields">
+ {request.kind==='facedown'&&<label>Reputation (required)<input type="number" min="-10" max="10" step="1" value={reputation} onChange={e=>setReputation(e.target.value)} placeholder="Not recorded" aria-label="Facedown Reputation"/></label>}<label>Situational modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Situational modifier"/></label>{request.kind==='facedown'&&<label>Opponent total (optional, GM-supplied)<input type="number" step="1" value={opponentTotal} onChange={e=>setOpponentTotal(e.target.value)} placeholder="Pending" aria-label="GM-supplied Facedown opponent total"/></label>}{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
+  <div className="roll-base-display">{request.kind==='damage'?'Dice pool':request.kind==='facedown'?'COOL + Reputation':`Base ${request.base}`} <strong>{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='facedown'?`${request.cool} + ${reputation.trim()||'?'}`:`+${request.base}`}</strong></div>
   <button className="btn primary roll-now" onClick={roll}><Dices size={21}/> Roll dice</button></>:
-  <div className="roll-result"><div className="dice-total">{result.total}</div><div className="micro-label">{result.critical?`CRITICAL ${result.critical.toUpperCase()}`:result.kind==='damage'?'DAMAGE TOTAL':'TOTAL ROLL'}</div>
-   <div className="roll-breakdown">{result.kind==='damage'?<><span>Dice: {result.dice.join(' + ')}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span></>:<><span>Base: {result.base}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>First d10: {result.first}</span>{result.second!==null&&<span>Critical follow-up: {result.critical==='success'?'+':'−'}{result.second}</span>}{result.dv!==null&&<span>DV: {result.dv} · {result.total>result.dv?'Beats DV':'Does not beat DV'}</span>}</>}</div>
+  <div className="roll-result"><div className="dice-total">{result.total}</div><div className="micro-label">{result.critical?`CRITICAL ${result.critical.toUpperCase()}`:result.kind==='damage'?'DAMAGE TOTAL':result.kind==='facedown'?'FACEDOWN TOTAL · OPPOSED':'TOTAL ROLL'}</div>
+   <div className="roll-breakdown">{result.kind==='facedown'?<><span>COOL: {result.cool}</span><span>Reputation: {result.reputation>=0?'+':''}{result.reputation}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>d10: {result.first}</span><span>{result.opponentTotal===null?'Awaiting GM-supplied opponent result':result.total===result.opponentTotal?'Tie — no effect':result.total>result.opponentTotal?'Nathan rolled higher':'Opponent rolled higher'}</span></>:result.kind==='damage'?<><span>Dice: {result.dice.join(' + ')}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span></>:<><span>Base: {result.base}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>First d10: {result.first}</span>{result.second!==null&&<span>Critical follow-up: {result.critical==='success'?'+':'−'}{result.second}</span>}{result.dv!==null&&<span>DV: {result.dv} · {result.total>result.dv?'Beats DV':'Does not beat DV'}</span>}</>}</div>
    <div className="roll-actions"><button className="btn outline" onClick={copy}><Copy size={16}/> Copy result</button><button className="btn primary" onClick={()=>setResult(null)}><RotateCcw size={16}/> New roll</button></div>
   </div>}
   {error&&<p className="alert error-alert">{error}</p>}
+  {request.kind==='facedown'&&<p className="facedown-note">Tie: neither participant gains an advantage. Otherwise, the loser may back down or take −2 on future actions against the winner until defeating them once. The app does not assign an NPC's choice or enforce penalties.</p>}
   <p className="footnote">Local roll only. No combat, resources, story, or canonical record is changed. Confirm consequential rolls with the GM.</p>
  </section></div>
 }
