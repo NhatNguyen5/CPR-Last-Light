@@ -70,6 +70,23 @@ function Overview({vm}) {
     </Panel>
   </div>
 }
+function GenericOverview({vm}) {
+ const pc=vm.background
+ return <div className="content-grid">
+  <Panel className="span-8 bio-card" label="CHARACTER PROFILE" right={<Tag>PLAYER VIEW · R{vm.revision}</Tag>}>
+   <div className="bio-header"><div className="portrait-placeholder"><Fingerprint size={48}/></div><div><div className="overline">{vm.role||'ROLE NOT RECORDED'}</div><h2>{vm.name}</h2><div className="subtle">{vm.employer||vm.campaignId} · Rank {vm.roleLevel??vm.rank?.level??'—'}</div></div></div>
+   <Details pairs={[[ 'Age',pc.age],['Origin',pc.origin],['Hometown',pc.hometown],['Career',pc.prior_profession],['Goal',pc.life_goal],['Values',pc.top_value]]}/>
+  </Panel>
+  <Panel className="span-4" label="CURRENT SCENE">
+   <div className="section-main">{vm.date?formatDate(vm.date):'Date not established'}</div>
+   <div className="clock">{vm.time||'—'}</div><p className="subtle smaller">{vm.scene||'Position not established'}</p>
+   <p className="footnote">Only a saved player projection; the viewer cannot advance fictional time.</p>
+  </Panel>
+  <Panel className="span-12" label="CURRENT ATTRIBUTES">
+   <div className="stats-grid">{statOrder.map(name=><div className="stat-tile" key={name}><span>{name}</span><strong>{fmt(vm.stats[name])}</strong></div>)}</div>
+  </Panel>
+ </div>
+}
 function SkillBar({level}) {
   return <div className="skill-tenbar" aria-label={`Rank ${level} of ${SKILL_MAX_LEVEL}`}>
     {Array.from({length:SKILL_MAX_LEVEL},(_,i)=><i key={i} className={i<level?'active':''}/>)}
