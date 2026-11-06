@@ -392,3 +392,9 @@
 .luck-refill{width:100%;background:transparent;border-color:#38594a;color:#a9c8b3}
 @media(max-width:760px){.luck-chip{min-height:37px;padding:0 8px;font-size:11px;gap:4px}.luck-chip span{display:none}.luck-chip svg{width:13px;height:13px}.luck-chip strong{font-size:11px}}
 @media(max-width:380px){.luck-chip{padding:0 6px}.wallet-chip{padding:0 6px}.topbar{padding:0 8px!important;gap:4px!important}.topbar-brand-name{font-size:8px}}
+
+/* Roll modifiers are unified; the LUCK tracker is deliberately manual. */
+.combat-luck-hint{margin:10px 0 12px;padding:11px 13px;border-left:2px solid #9fcdb1;background:#1c3229;color:#b9d5c7;font-size:12px;line-height:1.65}
+.combat-luck-hint strong,.roll-luck-hint strong{color:#e1f7e7}
+.roll-luck-hint{margin:16px 0 2px;padding:10px 12px;border-left:2px solid #d0b77d;background:#2b2c23;color:#d2d2b7;font-size:11px;line-height:1.65}
+@media(max-width:760px){.combat-luck-hint{font-size:11px;padding:9px 10px}}
