@@ -5,7 +5,7 @@ import {readCachedPlayerSheet,writeCachedPlayerSheet,clearCachedPlayerSheet,PLAY
 const FILE_ID = 'player-projection-1'
 const valid = {
   canonical_campaign_id:'CPR-HELIX-LAST-LIGHT-001',canonical_revision:4,
-  player_character:{full_name:'Nathan Guen',derived:{current_hp:40},skills:{Business:6}},
+  player_character:{id:'p1',full_name:'Nathan Guen',derived:{current_hp:40},skills:{Business:6}},
   equipment_and_property:{items:[]},
 }
 function memoryStorage() {
