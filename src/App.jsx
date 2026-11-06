@@ -164,9 +164,9 @@ function App(){
  const luckPlayerId=vm?.background?.id||''
  useEffect(()=>{
   if(!luckPlayerId){spentLuckRef.current=0;setSpentLuck(0);setLuckReady(false);return}
-  const value=readLuckSpent(browserStorage(),luckPlayerId,luckMax)
+  const value=readScopedLuck(browserStorage(),activeKey,luckPlayerId,luckMax)
   spentLuckRef.current=value;setSpentLuck(value);setLuckReady(true)
- },[luckPlayerId,luckMax])
+ },[activeKey,luckPlayerId,luckMax])
  const luckRemaining=luckReady?remainingLuck(luckMax,spentLuck):0
  const adjustLuck=useCallback(delta=>{
   if(!luckReady||!luckPlayerId)return false
@@ -174,9 +174,9 @@ function App(){
   if(next===null)return false
   spentLuckRef.current=next
   setSpentLuck(next)
-  writeLuckSpent(browserStorage(),luckPlayerId,next,luckMax)
+  writeScopedLuck(browserStorage(),activeKey,luckPlayerId,next,luckMax)
   return true
- },[luckReady,luckPlayerId,luckMax])
+ },[activeKey,luckReady,luckPlayerId,luckMax])
  const resetLuck=()=>{
   if(!luckReady||!luckPlayerId)return
   if(window.confirm('Refill the local LUCK pool for the start of a new game session? This does not edit Drive or advance fictional time.')){
