@@ -233,6 +233,7 @@ function App(){
    clearCachedPlayerSheet(browserStorage())
    tokenRef.current='';setToken('');setGearDraft({});setSheet(null);setMode('disconnected');setLastFetched(null);setError('')
  }
+ const rollScope=activeKey===DEFAULT_PROFILE_KEY?'':activeKey
  const saveLocalRoll=(roll)=>setRollHistory(previous=>{const next=[roll,...previous].slice(0,30);writeRollLog(browserStorage(),next);return next})
  const deleteRollHistory=()=>{clearRollLog(browserStorage());setRollHistory([])}
  const goToPage=(id)=>{setTab(id);setSyncOpen(false);window.scrollTo?.({top:0,behavior:'instant'})}
