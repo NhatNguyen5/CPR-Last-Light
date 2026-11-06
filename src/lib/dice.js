@@ -34,6 +34,12 @@ export function rollInitiative({base, modifier = 0, rng} = {}) {
   return {kind:'initiative',label:'Initiative',base,modifier,first,second:null,adjustment:0,total:base+modifier+first,critical:null}
 }
 
+export function rollFacedown({cool,reputation,modifier=0,rng}={}) {
+ if(!Number.isInteger(cool)||!Number.isInteger(reputation)||!Number.isInteger(modifier))throw Error('Invalid Facedown parameters')
+ const first=secureDie(10,rng)
+ return {kind:'facedown',label:'Facedown',cool,reputation,base:cool+reputation,modifier,first,second:null,adjustment:0,total:cool+reputation+modifier+first,critical:null}
+}
+
 export function rollDamage({label = 'Damage', count = 4, sides = 6, modifier = 0, rng} = {}) {
   if (!Number.isInteger(count)||count<1||count>20||!Number.isInteger(modifier))throw Error('Invalid damage roll.')
   const dice=Array.from({length:count},()=>secureDie(sides,rng))
