@@ -45,7 +45,7 @@ export function Inventory({vm,initialCategory='Gear',draftAdjustments={},onDraft
       const Icon=category==='Cyberware'?Cpu:category==='Armor'?Shield:Package
       return <article key={item.id} className="gear-entry">
        <div className="gear-entry-main"><div className="gear-entry-icon"><Icon size={21}/></div>
-        <div className="gear-entry-body"><div className="gear-entry-title"><strong>{item.name}</strong>{isCompany&&<span className="property-tag">HELIX PROPERTY</span>}</div>
+        <div className="gear-entry-body"><div className="gear-entry-title"><strong>{item.name}</strong>{isCompany&&<span className="property-tag">COMPANY PROPERTY</span>}</div>
          <p className="gear-description">{reference.description}</p>{reference.rules&&<p className="gear-rule-line">{reference.rules}</p>}
          {item.notes&&<p className="gear-saved-note">Saved note: {item.notes}</p>}
          <div className="gear-reference-line">{reference.page&&reference.source?<a href={reference.source} rel="noopener noreferrer" target="_blank">Cyberpunk RED Core · p.{reference.page}</a>:<span>Saved campaign record</span>}
@@ -60,10 +60,10 @@ export function Inventory({vm,initialCategory='Gear',draftAdjustments={},onDraft
         </div>
        </div>
        <button type="button" className="gear-detail-toggle" aria-expanded={isOpen} onClick={()=>setExpanded(prev=>({...prev,[item.id]:!isOpen}))}>Saved ownership & custody <ChevronDown size={14}/></button>
-       {isOpen&&<dl className="gear-entry-details"><div><dt>Owner</dt><dd>{isCompany?'Helix Meridian':'Nathan Guen'}</dd></div><div><dt>Custody</dt><dd>{item.custody_or_location||'Not established'}</dd></div><div><dt>Condition</dt><dd>{item.condition||'Not established'}</dd></div><div><dt>Saved quantity</dt><dd>{base}</dd></div></dl>}
+       {isOpen&&<dl className="gear-entry-details"><div><dt>Owner</dt><dd>{isCompany?(vm.employer||'Other owner'):vm.name}</dd></div><div><dt>Custody</dt><dd>{item.custody_or_location||'Not established'}</dd></div><div><dt>Condition</dt><dd>{item.condition||'Not established'}</dd></div><div><dt>Saved quantity</dt><dd>{base}</dd></div></dl>}
       </article>
     })}
-   </div>:<div className="gear-empty-category"><Package size={27}/><strong>No {category.toLowerCase()} recorded</strong><p>No items in this category are established in Nathan’s saved equipment. Empty does not mean an item is impossible to acquire later.</p></div>}
+   </div>:<div className="gear-empty-category"><Package size={27}/><strong>No {category.toLowerCase()} recorded</strong><p>No items in this category are established in this character’s saved equipment. Empty does not mean an item is impossible to acquire later.</p></div>}
    {category==='Ammo'&&<p className="gear-bottom-note">Magazine allocation is not established. Changing the draft count does not fire, reload, or spend ammunition.</p>}
    {category==='Cyberware'&&<p className="gear-bottom-note">Implanted options are distinct from external Smart Glasses. Draft changes never alter Humanity, EMP, option slots, or installed status.</p>}
    {staged.length>0&&<div className="gear-draft-footer"><div><strong>{staged.length} proposed change{staged.length===1?'':'s'}</strong><p>No campaign save was altered. Share this draft with the GM for approval and resolution.</p></div><div className="gear-draft-actions"><button type="button" onClick={copyDraft}><ClipboardCopy size={15}/> Copy</button><button type="button" onClick={()=>onDraftChange({})}><RotateCcw size={15}/> Reset</button></div></div>}
