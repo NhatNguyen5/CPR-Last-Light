@@ -216,19 +216,35 @@ function App(){
    return draft
   })
  }
- const refresh=useCallback(async(id,accessToken=tokenRef.current)=>{
-   if(!accessToken){setError('Sign in to Google first.');return false}
-   setBusy(true);setError('')
-   try{
-     const result=validatePlayerSheet(await fetchDriveJson(id,accessToken))
-     setGearDraft({})
-     const fetchedAt=Date.now()
-     setSheet(result);setMode('drive');setLastFetched(new Date(fetchedAt));setFileId(id);fileIdRef.current=id
-     if(offlineCopyEnabled)writeCachedPlayerSheet(browserStorage(),id,config.expectedPlayerFileId,result,fetchedAt)
-     try{localStorage.setItem(FILE_KEY,id)}catch{}
-     return true
-   }catch(e){setError(e.message||String(e));return false}
-   finally{setBusy(false)}
+ const refresh=useCallback(async(id,accessToken=tokenRef.current,{expectedKey=activeKeyRef.current,allowNew=false}={})=>{
+  if(!accessToken){setError('Sign in to Google first.');return false}
+  const sequence=++requestSeqRef.current
+  setBusy(true);setError('')
+  try{
+   const result=validatePlayerSheet(await fetchDriveJson(id,accessToken))
+   const actualKey=result.canonical_campaign_id+'::'+result.player_character.id
+   if(!allowNew&&actualKey!==expectedKey)throw Error('Selected Drive sheet belongs to a different character. Use Choose Drive file to add it.')
+   if(sequence!==requestSeqRef.current)return false
+   let profile
+   if(allowNew){
+    profile=addProfile(browserStorage(),result,{fileId:id,source:'drive'})
+    setProfiles(readProfiles(browserStorage()))
+    activeKeyRef.current=profile.key;setActiveKey(profile.key)
+    setActiveProfileKey(browserStorage(),profile.key)
+    setRollHistory(readRollLog(browserStorage(),rollScopeFor(profile.key)))
+    setTab('overview')
+   }else{
+    profile=readProfiles(browserStorage()).find(p=>p.key===expectedKey)
+    if(!profile)throw Error('Profile not found. Import the player sheet again.')
+   }
+   const fetchedAt=Date.now()
+   setSheet(result);setMode('drive');setLastFetched(new Date(fetchedAt))
+   setFileId(id);fileIdRef.current=id
+   setGearDraft(readProfileDraft(browserStorage(),profile.key))
+   if(offlineCopyEnabled)saveProfileSnapshot(browserStorage(),profile,result,fetchedAt)
+   return true
+  }catch(e){if(sequence===requestSeqRef.current)setError(e.message||String(e));return false}
+  finally{if(sequence===requestSeqRef.current)setBusy(false)}
  },[offlineCopyEnabled])
  useEffect(()=>{
    if(!cfgReady)return
