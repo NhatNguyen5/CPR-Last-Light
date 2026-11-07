@@ -427,3 +427,50 @@
  .top-left{gap:5px!important;min-width:0}
 }
 @media(max-width:390px){.topbar-brand-name{display:none!important}.character-selector>button{width:30px}}
+
+/* Agent Messages: verified player-only inbox, phone-style conversation and unsent drafts. */
+.agent-message-phone{display:flex;flex-direction:column;min-height:660px;color:#d9f2e5}
+.agent-message-inbox{flex:1;max-height:62vh;min-height:300px}
+.agent-inbox-item{align-items:flex-start;padding:17px 8px}
+.agent-inbox-item .phone-person-avatar{width:42px;height:42px}
+.agent-inbox-item .phone-person-copy small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;line-height:1.5;color:#aac6b9}
+.agent-inbox-time{color:#719c8b;font:10px 'IBM Plex Mono',monospace;line-height:1.4}
+.agent-message-empty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:65px 22px;color:#8bbda6;text-align:center}
+.agent-message-empty strong{color:#d3ebdc;font-size:14px}
+.agent-message-empty p{font-size:12px;line-height:1.5;margin:0}
+.agent-message-thread{display:flex;flex-direction:column;min-height:540px}
+.agent-message-thread-header{border-top:1px solid #2c4b42;border-bottom:1px solid #2c4b42;background:#0d211e}
+.agent-message-thread-header .phone-detail-back{padding:11px 18px}
+.agent-message-thread-person{display:flex;align-items:center;gap:10px;padding:0 17px 13px}
+.agent-message-thread-person .phone-person-avatar{width:38px;height:38px}
+.agent-message-thread-person>div:last-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.agent-message-thread-person strong{font:600 16px 'Space Grotesk',sans-serif}
+.agent-message-thread-person small{font-size:11px;color:#91b9a7}
+.agent-message-timeline{display:flex;flex-direction:column;gap:16px;padding:24px 15px;min-height:175px;max-height:44vh;overflow-y:auto;scrollbar-color:#36594b #071214}
+.agent-message-bubble{align-self:flex-start;max-width:92%;background:#1c332f;border:1px solid #38574b;border-radius:5px 15px 15px 15px;padding:13px 15px}
+.agent-message-bubble.outgoing{align-self:flex-end;background:#254837;border-color:#537b61;border-radius:15px 5px 15px 15px}
+.agent-message-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.65;color:#e5f9ed}
+.agent-message-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;color:#88af9d;font:9px 'IBM Plex Mono',monospace}
+.agent-message-contact-note{display:flex;gap:7px;align-items:flex-start;padding:8px 18px 12px;margin:0;color:#809e90;font:10px/1.6 'IBM Plex Mono',monospace}
+.agent-message-contact-note svg{flex:0 0 auto;margin-top:2px}
+.agent-message-compose{padding:16px 16px 4px;border-top:1px solid #35574b;background:#0e211d;margin-top:auto}
+.agent-message-compose label{display:flex;align-items:center;justify-content:space-between;color:#d4eedd;font-weight:600;font-size:12px;margin-bottom:9px}
+.agent-message-compose label small{font:9px 'IBM Plex Mono',monospace;color:#85a998}
+.agent-message-compose textarea{box-sizing:border-box;display:block;width:100%;min-height:85px;padding:11px 12px;border:1px solid #466356;background:#0a1715;color:#e8f8ed;resize:vertical;font:12px/1.6 inherit;border-radius:3px}
+.agent-message-compose textarea:focus{outline:1px solid #a5d2b4;border-color:#a5d2b4}
+.agent-compose-actions{display:flex;justify-content:flex-end;gap:8px;margin:12px 0}
+.agent-compose-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 14px;border:1px solid #426859;background:#1c302a;color:#ceeadd;font-size:11px;font-weight:600;cursor:pointer}
+.agent-compose-actions .agent-draft-copy{background:#2f5942;border-color:#8acba2;color:#f1fff5}
+.agent-compose-actions button:disabled{opacity:.45;cursor:not-allowed}
+.agent-compose-notice{color:#b7e1c6;font-size:11px;line-height:1.5;margin:8px 2px}
+.agent-message-compose .phone-offline{margin:8px 0 14px;align-items:flex-start}
+.agent-message-compose .phone-offline svg{flex:0 0 auto;margin-top:2px}
+@media(max-width:760px){
+ .agent-message-phone{min-height:550px}
+ .agent-message-timeline{max-height:38vh;padding:17px 10px}
+ .agent-message-bubble{max-width:96%}
+ .agent-message-body{font-size:12px}
+ .agent-message-compose{padding:12px 12px 2px}
+ .agent-message-thread-person{padding:0 13px 10px}
+ .agent-message-meta{flex-wrap:wrap}
+}
