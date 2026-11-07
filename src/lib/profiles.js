@@ -1,10 +1,12 @@
 import {validatePlayerSheet} from './projection.js'
 import {readCachedPlayerSheet} from './cache.js'
 const NATHAN_FILE_ID = '1aDYZX-cWZYem0yO5-KAqH4VwUUYg1f8e'
+const ISA_PLAYER_FILE_ID = '17yfrNWvdHTLwWMgF_5ha_trAXKdyBAJr'
 
 export const PROFILE_INDEX_KEY='cpr-last-light:character-profiles-v1'
 export const ACTIVE_PROFILE_KEY='cpr-last-light:active-profile-v1'
 export const DEFAULT_PROFILE_KEY='CPR-HELIX-LAST-LIGHT-001::CPR-HELIX-PC-001'
+export const QUIET_HAND_PROFILE_KEY='CPR-TE-QUIET-HAND-001::CPR-TE-QUIET-HAND-001-PC-001'
 const MAX_PROFILES=32
 const CACHE_PREFIX='cpr-last-light:profile-snapshot-v1:'
 const DRAFT_PREFIX='cpr-last-light:inventory-draft-v1:'
@@ -21,6 +23,12 @@ export function defaultProfile(){return {
  key:DEFAULT_PROFILE_KEY,campaignId:'CPR-HELIX-LAST-LIGHT-001',
  characterId:'CPR-HELIX-PC-001',name:'Nathan Guen',role:'Exec',
  fileId:NATHAN_FILE_ID,source:'drive',
+}}
+/** Verified second campaign: player-only Drive projection, NOT the canonical save. */
+export function quietHandProfile(){return {
+ key:QUIET_HAND_PROFILE_KEY,campaignId:'CPR-TE-QUIET-HAND-001',
+ characterId:'CPR-TE-QUIET-HAND-001-PC-001',name:'Isa (13) Yamikage',role:'Solo',
+ fileId:ISA_PLAYER_FILE_ID,source:'drive'
 }}
 export function profileFromSheet(sheet,fileId='',source='local'){
  const safe=validatePlayerSheet(sheet),pc=safe.player_character
@@ -44,17 +52,23 @@ function sanitizeProfile(p){
 export function readProfiles(storage){
  let list=[]
  try{const value=JSON.parse(storageGet(storage,PROFILE_INDEX_KEY)||'[]');if(Array.isArray(value))list=value}catch{}
- const result=[defaultProfile()],seen=new Set([DEFAULT_PROFILE_KEY])
+ // Both verified player-only campaign bindings are discoverable without exporting a private sheet to GitHub.
+ const builtins=[defaultProfile(),quietHandProfile()]
+ const result=[...builtins],seen=new Set(builtins.map(p=>p.key))
  for(const item of list){
   const p=sanitizeProfile(item)
-  if(!p||seen.has(p.key))continue
-  seen.add(p.key);result.push(p)
+  if(!p)continue
+  if(seen.has(p.key)){
+   // Preserve user-saved labels and a Picker-granted file ID while retaining the verified built-in fallback.
+   const index=result.findIndex(x=>x.key===p.key)
+   if(index!==-1){
+    result[index]={...result[index],name:p.name,role:p.role,fileId:p.fileId||result[index].fileId,source:(p.fileId||result[index].fileId)?'drive':p.source}
+   }
+   continue
+  }
   if(result.length>=MAX_PROFILES)break
+  seen.add(p.key);result.push(p)
  }
- // Persisted metadata for Nathan may refresh his name/role but must never change his identity.
- const stored=list.find(p=>p?.key===DEFAULT_PROFILE_KEY)
- const p=sanitizeProfile(stored)
- if(p)result[0]={...p,fileId:p.fileId||NATHAN_FILE_ID}
  return result
 }
 export function writeProfiles(storage,profiles){
@@ -126,7 +140,7 @@ export function writeProfileDraft(storage,key,draft){
  return storageSet(storage,draftKey(key),JSON.stringify(draft))
 }
 export function removeProfile(storage,key){
- if(key===DEFAULT_PROFILE_KEY)return false
+ if(key===DEFAULT_PROFILE_KEY||key===QUIET_HAND_PROFILE_KEY)return false
  const list=readProfiles(storage)
  if(!list.some(p=>p.key===key))return false
  const next=list.filter(p=>p.key!==key)
