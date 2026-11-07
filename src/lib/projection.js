@@ -64,6 +64,7 @@ export function getViewModel(data) {
     family: data.family_and_connections?.player_known_family || [],
     friends: data.family_and_connections?.personal_connections || [],
     knownNpcs: data.family_and_connections?.known_npcs || [],
+    agentMessages: Array.isArray(data.agent_messages) ? data.agent_messages : [],
     driver: data.company_driver || {},
     background: pc,
     housing: data.housing_and_lifestyle || {},
