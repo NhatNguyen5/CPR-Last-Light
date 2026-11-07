@@ -33,7 +33,7 @@ test('profiles, snapshot and draft are independently keyed and Nathan remains de
  const store=memoryStorage(),other=sample('OTHER-CAMPAIGN-001','PC-002','Test Netrunner','Netrunner')
  assert.equal(readProfiles(store)[0].key,DEFAULT_PROFILE_KEY)
  const profile=addProfile(store,other)
- assert.equal(readProfiles(store).length,2)
+ assert.equal(readProfiles(store).length,3) // Nathan + verified Isa + imported character
  assert.equal(readActiveProfileKey(store),DEFAULT_PROFILE_KEY)
  assert.ok(setActiveProfileKey(store,profile.key))
  assert.equal(readActiveProfileKey(store),profile.key)
