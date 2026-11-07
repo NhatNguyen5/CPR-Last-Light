@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="name detail">
   <title id="name">Helix Meridian</title>
   <desc id="detail">Proposed visual mark: a paired restorative-cybernetics helix crossing a meridian ring.</desc>
-  <defs><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9ce7ce"/><stop offset="1" stop-color="#60ad9e"/></linearGradient></defs>
-  <path fill="#0a1619" d="M12 2h40l10 10v40L52 62H12L2 52V12z"/>
-  <path fill="none" stroke="#4b8478" stroke-width="1.6" d="M13 6h38l7 7v38l-7 7H13l-7-7V13z"/>
-  <circle cx="32" cy="32" r="21" fill="none" stroke="#4f8377" stroke-width="1.7" stroke-dasharray="52 7 52 20" transform="rotate(15 32 32)"/>
+  <defs><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffda49"/><stop offset="1" stop-color="#f6b928"/></linearGradient></defs>
+  <path fill="#09090b" d="M12 2h40l10 10v40L52 62H12L2 52V12z"/>
+  <path fill="none" stroke="#d21d35" stroke-width="1.6" d="M13 6h38l7 7v38l-7 7H13l-7-7V13z"/>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="#d21d35" stroke-width="1.7" stroke-dasharray="52 7 52 20" transform="rotate(15 32 32)"/>
   <path d="M22 13c20 8 20 30 0 38M42 13c-20 8-20 30 0 38" fill="none" stroke="url(#metal)" stroke-width="4" stroke-linecap="square"/>
-  <path d="M22 19h20M24 28h16M24 37h16M22 46h20" stroke="#f1b47f" stroke-width="2.4"/>
-  <circle cx="32" cy="32" r="2.1" fill="#baf5d9"/>
+  <path d="M22 19h20M24 28h16M24 37h16M22 46h20" stroke="#fff3b7" stroke-width="2.4"/>
+  <circle cx="32" cy="32" r="2.1" fill="#ffffff"/>
 </svg>
