@@ -1,11 +1,12 @@
 import {useEffect,useMemo,useState} from 'react'
 import {
   Activity, BookOpen, BriefcaseBusiness, ChevronRight, Cloud, ContactRound,
-  Cpu, Dices, FileText, HeartPulse, LockKeyhole, MapPin, Search, ChevronLeft, Smartphone, Signal,
+  Cpu, Dices, FileText, HeartPulse, LockKeyhole, MapPin, Search, ChevronLeft, Smartphone, Signal, MessageCircle,
   Shield, UserRound, UsersRound, X, CarFront, RotateCcw, Copy, Trash2, Building2, IdCard,
 } from 'lucide-react'
 import {knownPeople,contactPeople} from './lib/people.js'
 import {getCompanyPersonnel} from './lib/companyPersonnel.js'
+import {buildMessageThreads} from './lib/messages.js'
 import {rollRedCheck,rollInitiative,rollFacedown,rollDamage,describeRoll} from './lib/dice.js'
 
 const human=v => v===undefined||v===null||v===''?'Not recorded':String(v)
@@ -21,6 +22,7 @@ const roleLabel = p => p.kind==='family'?'Family':p.kind==='friend'?'Personal co
 export function AgentHub({vm,onNavigate}) {
  const entries=[
   {id:'contacts',label:'Contacts',sub:'Personal directory',Icon:ContactRound,number:contactPeople(vm).length},
+  {id:'messages',label:'Messages',sub:'Agent inbox and reply drafts',Icon:MessageCircle,number:buildMessageThreads(vm).length},
   {id:'npcs',label:'Known NPCs',sub:'Player-known dossiers',Icon:UsersRound,number:knownPeople(vm).length},
   {id:'personnel',label:'Company Personnel',sub:'Assigned personnel',Icon:IdCard,number:getCompanyPersonnel(vm).length},
   {id:'records',label:'Records',sub:'History and journal',Icon:BookOpen},
