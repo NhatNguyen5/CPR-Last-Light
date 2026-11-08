@@ -221,10 +221,12 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0}) {
  const [dv,setDv]=useState('')
  const [specialization,setSpecialization]=useState('')
  const [reputation,setReputation]=useState('')
+ const [damageCount,setDamageCount]=useState('3')
+ const [damageSource,setDamageSource]=useState('')
  const [opponentTotal,setOpponentTotal]=useState('')
  const [result,setResult]=useState(null)
  const [error,setError]=useState('')
- useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setReputation(Number.isInteger(request?.reputation)?String(request.reputation):'');setOpponentTotal('');setResult(null);setError('')},[request])
+ useEffect(()=>{setModifier('0');setDv('');setSpecialization('');setReputation(Number.isInteger(request?.reputation)?String(request.reputation):'');setOpponentTotal('');setDamageCount(String(request?.count??3));setDamageSource(request?.label==='Damage'?'':request?.label||'');setResult(null);setError('')},[request])
  if(!request)return null
  const roll=()=>{
   const m=Number(modifier||0)
@@ -232,6 +234,14 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0}) {
   if(request.requiresSpecialization&&!specialization.trim()){setError('Name the specific subject, language, style, or field before rolling.');return}
   const parsedDv=dv.trim()===''?null:Number(dv)
   if(parsedDv!==null&&(!Number.isInteger(parsedDv)||parsedDv<0||parsedDv>100)){setError('Enter a DV from 0 to 100, or leave it blank.');return}
+  let diceCount=request.count
+  if(request.kind==='damage'){
+   diceCount=Number(damageCount)
+   if(!Number.isInteger(diceCount)||diceCount<1||diceCount>20){
+    setError('Choose between 1 and 20 six-sided damage dice.');return
+   }
+   if(damageSource.trim().length>100){setError('Damage source must be 100 characters or fewer.');return}
+  }
   let reputationValue=null, opposed=null
   if(request.kind==='facedown'){
    const rawRep=reputation.trim()
@@ -246,8 +256,8 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0}) {
    }
   }
   try{
-   const rollLabel=request.requiresSpecialization?`${request.label} (${specialization.trim()})`:request.label
-   const data=request.kind==='facedown'?rollFacedown({cool:request.cool,reputation:reputationValue,modifier:m}):request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:rollLabel,count:request.count,sides:request.sides,modifier:m}):rollRedCheck({label:rollLabel,base:request.base,modifier:m})
+   const rollLabel=request.kind==='damage'?(damageSource.trim()||'Damage'):request.requiresSpecialization?`${request.label} (${specialization.trim()})`:request.label
+   const data=request.kind==='facedown'?rollFacedown({cool:request.cool,reputation:reputationValue,modifier:m}):request.kind==='initiative'?rollInitiative({base:request.base,modifier:m}):request.kind==='damage'?rollDamage({label:rollLabel,count:diceCount,sides:6,modifier:m}):rollRedCheck({label:rollLabel,base:request.base,modifier:m})
    const recorded={...data,dv:parsedDv,opponentTotal:request.kind==='facedown'?opposed:null,at:Date.now()}
    setResult(recorded);setError('');onSave(recorded)
   }catch(e){setError(e.message||String(e))}
@@ -256,16 +266,22 @@ export function RollDialog({request,onClose,onSave,luckRemaining=0}) {
  return <div className="dossier-mask dice-mask" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
  <section className="dossier-card dice-card" role="dialog" aria-modal="true" aria-labelledby="dice-title">
   <div className="dossier-top"><span className="micro-label">LOCAL DICE TERMINAL</span><button className="icon-button" onClick={onClose} aria-label="Close roller"><X size={19}/></button></div>
-  <h2 id="dice-title">{request.label}</h2><p className="subtle smaller">{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='initiative'?'REF + 1d10 (no Skill critical explosion)':request.kind==='facedown'?'COOL + Reputation + 1d10 · opposed (no Skill critical explosion)':'STAT + Skill + 1d10'}</p>
+  <h2 id="dice-title">{result?.label||request.label}</h2><p className="subtle smaller">{request.kind==='damage'?`${result?.dice?.length??damageCount}d6 · ordinary damage dice`:request.kind==='initiative'?'REF + 1d10 (no Skill critical explosion)':request.kind==='facedown'?'COOL + Reputation + 1d10 · opposed (no Skill critical explosion)':'STAT + Skill + 1d10'}</p>
   {!result?<>{request.untrained&&<p className="untrained-note">Untrained attempt: Skill Level 0. Whether this task is possible without specific training, equipment, or knowledge is for the GM to decide.</p>}{request.requiresSpecialization&&<label className="specialization-label">Specific field / language / style<input type="text" value={specialization} maxLength={100} onChange={e=>setSpecialization(e.target.value)} placeholder="Name the attempted specialization" aria-label="Attempted specialization"/></label>}
  {request.kind==='facedown'&&<p className="facedown-note">{Number.isInteger(request.reputation)?'Reputation is prefilled from the saved player sheet; confirm applicable adjustments with the GM.':'Reputation is not recorded in Nathan’s current player sheet. Enter a GM-confirmed value.'} A defining reputation for cowardice counts as negative. The GM decides when Facedowns occur.</p>}
+ {request.kind==='damage'&&<div className="damage-dialog-controls">
+  <label>Damage source (optional)<input type="text" maxLength={100} value={damageSource} onChange={e=>setDamageSource(e.target.value)} placeholder="E.g. Heavy Pistol, Brawling" aria-label="Damage source"/></label>
+  <label>Number of six-sided dice<input type="number" min="1" max="20" step="1" value={damageCount} onChange={e=>setDamageCount(e.target.value)} aria-label="Number of damage dice"/></label>
+  <div className="damage-quick-choices" aria-label="Quick damage dice counts">{[1,2,3,4,5,6].map(n=><button type="button" key={n} className={damageCount===String(n)?'selected':''} aria-pressed={damageCount===String(n)} onClick={()=>setDamageCount(String(n))}>{n}d6</button>)}</div>
+  <p>Rolls each d6 once and shows every die. Damage bonuses or penalties go in the standard Modifier field below. No automatic armor or HP changes.</p>
+ </div>}
  <div className="roll-fields">
  {request.kind==='facedown'&&<label>Reputation (required)<input type="number" min="-10" max="10" step="1" value={reputation} onChange={e=>setReputation(e.target.value)} placeholder="Not recorded" aria-label="Facedown Reputation"/></label>}<label>Modifier<input type="number" step="1" value={modifier} onChange={e=>setModifier(e.target.value)} aria-label="Modifier"/></label>{request.kind==='facedown'&&<label>Opponent total (optional, GM-supplied)<input type="number" step="1" value={opponentTotal} onChange={e=>setOpponentTotal(e.target.value)} placeholder="Pending" aria-label="GM-supplied Facedown opponent total"/></label>}{request.kind==='check'&&<label>GM-set DV (optional)<input type="number" step="1" min="0" value={dv} onChange={e=>setDv(e.target.value)} placeholder="Unknown" aria-label="GM-set difficulty"/></label>}</div>
   {request.kind==='check'&&<p className="roll-luck-hint">LUCK is allowed on this Skill Check, including combat checks. {luckRemaining} point(s) remain in the local tracker. If using any, commit them <strong>before</strong> rolling, include the bonus in <strong>Modifier</strong>, and mark them spent in Combat → LUCK. The modifier does not automatically deduct LUCK.</p>}
-  <div className="roll-base-display">{request.kind==='damage'?'Dice pool':request.kind==='facedown'?'COOL + Reputation':`Base ${request.base}`} <strong>{request.kind==='damage'?`${request.count}d${request.sides}`:request.kind==='facedown'?`${request.cool} + ${reputation.trim()||'?'}`:`+${request.base}`}</strong></div>
+  <div className="roll-base-display">{request.kind==='damage'?'Dice pool':request.kind==='facedown'?'COOL + Reputation':`Base ${request.base}`} <strong>{request.kind==='damage'?`${damageCount}d6`:request.kind==='facedown'?`${request.cool} + ${reputation.trim()||'?'}`:`+${request.base}`}</strong></div>
   <button className="btn primary roll-now" onClick={roll}><Dices size={21}/> Roll dice</button></>:
   <div className="roll-result"><div className="dice-total">{result.total}</div><div className="micro-label">{result.critical?`CRITICAL ${result.critical.toUpperCase()}`:result.kind==='damage'?'DAMAGE TOTAL':result.kind==='facedown'?'FACEDOWN TOTAL · OPPOSED':'TOTAL ROLL'}</div>
-   <div className="roll-breakdown">{result.kind==='facedown'?<><span>COOL: {result.cool}</span><span>Reputation: {result.reputation>=0?'+':''}{result.reputation}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>d10: {result.first}</span><span>{result.opponentTotal===null?'Awaiting GM-supplied opponent result':result.total===result.opponentTotal?'Tie — no effect':result.total>result.opponentTotal?'Nathan rolled higher':'Opponent rolled higher'}</span></>:result.kind==='damage'?<><span>Dice: {result.dice.join(' + ')}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span></>:<><span>Base: {result.base}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>First d10: {result.first}</span>{result.second!==null&&<span>Critical follow-up: {result.critical==='success'?'+':'−'}{result.second}</span>}{result.dv!==null&&<span>DV: {result.dv} · {result.total>result.dv?'Beats DV':'Does not beat DV'}</span>}</>}</div>
+   <div className="roll-breakdown">{result.kind==='facedown'?<><span>COOL: {result.cool}</span><span>Reputation: {result.reputation>=0?'+':''}{result.reputation}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>d10: {result.first}</span><span>{result.opponentTotal===null?'Awaiting GM-supplied opponent result':result.total===result.opponentTotal?'Tie — no effect':result.total>result.opponentTotal?'Nathan rolled higher':'Opponent rolled higher'}</span></>:result.kind==='damage'?<><span>Damage dice ({result.dice.length}d6): {result.dice.join(' + ')}</span><span>Dice subtotal: {result.dice.reduce((sum,die)=>sum+die,0)}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span></>:<><span>Base: {result.base}</span><span>Modifier: {result.modifier>=0?'+':''}{result.modifier}</span><span>First d10: {result.first}</span>{result.second!==null&&<span>Critical follow-up: {result.critical==='success'?'+':'−'}{result.second}</span>}{result.dv!==null&&<span>DV: {result.dv} · {result.total>result.dv?'Beats DV':'Does not beat DV'}</span>}</>}</div>
    <div className="roll-actions"><button className="btn outline" onClick={copy}><Copy size={16}/> Copy result</button><button className="btn primary" onClick={()=>setResult(null)}><RotateCcw size={16}/> New roll</button></div>
   </div>}
   {error&&<p className="alert error-alert">{error}</p>}
