@@ -8,6 +8,7 @@ import {knownPeople,contactPeople} from './lib/people.js'
 import {getCompanyPersonnel} from './lib/companyPersonnel.js'
 import {buildMessageThreads} from './lib/messages.js'
 import {rollRedCheck,rollInitiative,rollFacedown,rollDamage,describeRoll} from './lib/dice.js'
+import {getDamagePresets} from './lib/damagePresets.js'
 
 const human=v => v===undefined||v===null||v===''?'Not recorded':String(v)
 const unknown=v=>!v||/^(unknown|unestablished|undetermined|not yet)/i.test(String(v))
@@ -169,7 +170,7 @@ export function ExecPage({vm,onNavigate}) {
 export function CombatPage({vm,onRoll,history,onShowHistory,luckMax=0,luckRemaining=0,luckReady=false,onLuckSpend,onLuckUndo,onLuckReset}) {
  const skills=Object.fromEntries(vm.skills)
  const stat=vm.stats||{}
- const pistol=(vm.inventory||[]).find(item=>/Very Heavy Pistol/i.test(item.name||'')&&!/(round|ammo|ammunition)/i.test(item.name||''))
+ const damagePresets=getDamagePresets(vm)
  const checks=[
   {label:'Initiative',stat:'REF',rank:0,kind:'initiative',desc:'Turn order · REF + 1d10 · LUCK does not apply'},
   {label:'Handgun',stat:'REF',rank:skills.Handgun||0,kind:'check',desc:'Ranged attack Skill Check · LUCK eligible'},
@@ -188,8 +189,19 @@ export function CombatPage({vm,onRoll,history,onShowHistory,luckMax=0,luckRemain
    <div><strong>Facedown</strong><span>Opposed · COOL + Reputation + 1d10</span><small>COOL {human(stat.COOL)} · Reputation confirmed before rolling</small></div>
    <button className="roll-trigger" type="button" disabled={!Number.isInteger(stat.COOL)} aria-label="Open Facedown roll" onClick={()=>onRoll({kind:'facedown',label:'Facedown',cool:stat.COOL,base:stat.COOL,reputation:vm.reputation})}><Dices size={18}/> Facedown</button>
   </div>
-  <div className="directory-heading">DAMAGE DICE</div>
-  {pistol&&<div className="combat-row"><div><strong>{pistol.name}</strong><span>4d6 damage if a hit is confirmed</span><small>No ammo, HP, or armor is changed by rolling here.</small></div><button className="roll-trigger" onClick={()=>onRoll({kind:'damage',label:pistol.name+' · 4d6 damage',count:4,sides:6})}><Dices size={18}/> 4d6</button></div>}
+  <div className="directory-heading">DAMAGE ROLLS</div>
+  <p className="damage-info">Roll damage after a hit is confirmed. Damage uses ordinary d6s, without a Skill Check critical follow-up or LUCK bonus. Nothing is applied automatically.</p>
+  <button type="button" className="damage-custom-launch" onClick={()=>onRoll({kind:'damage',label:'Damage',count:3,sides:6,customizable:true})}>
+   <span><Dices size={21}/><strong>Roll damage</strong><small>Choose the number of d6 and any modifier</small></span>
+   <span>Custom <ChevronRight size={17}/></span>
+  </button>
+  {damagePresets.length>0&&<><div className="damage-preset-label">QUICK DAMAGE PRESETS · SAVED CHARACTER</div>
+   <div className="damage-preset-grid">{damagePresets.map(p=>
+    <button type="button" key={p.id} onClick={()=>onRoll({kind:'damage',label:p.label+' damage',count:p.count,sides:p.sides,customizable:true})} aria-label={`Roll ${p.count}d6 damage for ${p.label}`}>
+     <span>{p.label}</span><strong>{p.count}d6</strong>
+    </button>)}</div>
+  </>}
+  <p className="footnote">Presets appear only when a damage pool is recorded for this character or referenced for an owned weapon. Ownership alone does not mean the weapon is carried, loaded, or able to hit.</p>
  </section>
  <section className="panel span-4">
   <div className="micro-label">SESSION RESOURCE / PLAYER TRACKER</div>
