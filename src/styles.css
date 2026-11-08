@@ -542,3 +542,41 @@ a:hover{color:var(--cp-white)}
 .skill-ip-banner>strong{color:var(--cp-yellow)}
 .character-menu{background:#160d12;border-color:#a73549}
 .character-menu>button[aria-current=true]{background:#5a1526;border-color:var(--cp-yellow);color:#fff}
+
+/* Flexible damage dice controls: matches the red, black, yellow, white theme. */
+.damage-info{margin:12px 0 17px;color:#e7dfe2;font-size:12px;line-height:1.65}
+.damage-custom-launch{width:100%;display:flex;align-items:center;justify-content:space-between;gap:15px;border:1px solid #e03c50;border-left:3px solid var(--cp-yellow,#ffda49);background:linear-gradient(115deg,#4d1020,#200e15);color:#fff;padding:16px 17px;text-align:left}
+.damage-custom-launch:hover,.damage-custom-launch:focus-visible{border-color:var(--cp-yellow,#ffda49);background:linear-gradient(115deg,#69192c,#2a101a)}
+.damage-custom-launch>span{display:flex;align-items:center;gap:9px}
+.damage-custom-launch>span:first-child{flex-wrap:wrap;min-width:0}
+.damage-custom-launch svg{color:var(--cp-yellow,#ffda49);flex:0 0 auto}
+.damage-custom-launch strong{font:600 16px 'Space Grotesk',sans-serif}
+.damage-custom-launch small{flex:1 1 100%;margin-left:30px;color:#eddbde;font-size:11px;line-height:1.4}
+.damage-custom-launch>span:last-child{color:var(--cp-yellow,#ffda49);font:600 10px 'IBM Plex Mono',monospace;text-transform:uppercase;white-space:nowrap}
+.damage-preset-label{margin:22px 0 10px;color:var(--cp-yellow,#ffda49);font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.1em}
+.damage-preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.damage-preset-grid button{display:flex;justify-content:space-between;align-items:center;gap:12px;min-width:0;text-align:left;background:#211016;border:1px solid #722d3a;color:#fff;padding:12px 13px;cursor:pointer}
+.damage-preset-grid button:hover,.damage-preset-grid button:focus-visible{border-color:var(--cp-yellow,#ffda49);background:#441322}
+.damage-preset-grid button span{font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.damage-preset-grid button strong{flex:0 0 auto;color:var(--cp-yellow,#ffda49);font:600 13px 'IBM Plex Mono',monospace}
+.damage-dialog-controls{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;margin:21px 0 12px}
+.damage-dialog-controls label{display:flex;flex-direction:column;gap:7px;min-width:0;color:var(--cp-yellow,#ffda49);font:600 11px 'IBM Plex Mono',monospace;line-height:1.4}
+.damage-dialog-controls input{width:100%;min-height:42px;padding:9px 10px;color:#fff;background:#1d0e15;border:1px solid #863544;outline:none}
+.damage-dialog-controls input:focus-visible{border-color:var(--cp-yellow,#ffda49)}
+.damage-quick-choices{grid-column:1/-1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.damage-quick-choices button{background:#261017;border:1px solid #79303d;color:#fff;min-height:37px;padding:7px 3px;font:600 11px 'IBM Plex Mono',monospace}
+.damage-quick-choices button.selected{border-color:var(--cp-yellow,#ffda49);background:#9d1f33;color:#fff}
+.damage-quick-choices button:hover{background:#6b1a2b}
+.damage-dialog-controls p{grid-column:1/-1;color:#e1d6d9;font-size:11px;line-height:1.6;margin:0}
+@media(max-width:760px){
+ .damage-preset-grid{grid-template-columns:1fr}
+ .damage-custom-launch{padding:14px 12px}
+ .damage-custom-launch strong{font-size:14px}
+ .damage-custom-launch small{margin-left:28px}
+ .damage-dialog-controls{gap:10px}
+ .damage-quick-choices button{font-size:10px;min-height:40px}
+}
+@media(max-width:370px){
+ .damage-dialog-controls{grid-template-columns:1fr}
+ .damage-quick-choices{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
