@@ -183,3 +183,13 @@ The same private Cyberpunk RED viewer can display multiple independent player ch
 - To load it, select **Characters → Isa (13) Yamikage**, sign in to Drive and refresh. If Google's `drive.file` scope has not granted access yet, use **Characters → Choose Drive file** and select `The Quiet Hand/PLAYER_SHEET.json` once. The picker binds that exact file and retains its approved ID in this browser. Alternatively use the **Import JSON** option with the downloaded player-only projection.
 - The app stores his sheet snapshot, LUCK, dice rolls, inventory draft, and Agent draft messages under **Isa's campaign + character ID**; Nathan's earlier records and canonical campaign are never touched.
 - Player sheet creation and registration do not create in-world messages, spend funds, assign equipment to worn slots, accept gigs, or advance time. The authoritative Quiet Hand canonical state remains revision 1.
+
+### Flexible combat damage roller (November 2026)
+
+**Combat → Damage Rolls → Roll damage** opens a configurable, secure damage dice roller for any player character. Choose **1–20 six-sided dice** (quick buttons for 1d6–6d6), an optional damage source label, and the existing general **Modifier** field. The result shows every individual die, their subtotal, the modifier, and the final total. Damage dice do not use the Skill Check critical follow-up mechanic, and LUCK is not spent on damage.
+
+The Combat page also offers one-tap **character-specific damage presets**, but only for:
+- A player-owned weapon with an explicit d6 damage pool in the player-only sheet's `mechanics` field or a matching indexed published rule (e.g. Nathan's 4d6 Very Heavy Pistol or Isa's 3d6 Heavy Pistol).
+- Brawling or Martial Arts unarmed damage recorded in that character's `derived` fields (e.g. Isa's saved 4d6 entries).
+
+Presets do not imply the weapon is loaded/equipped, that a hit occurred, or that an unknown weapon's damage has been established. They do not infer damage for gear without an explicit value. Rolls use cryptographically secure dice, remain in the current character's **local browser roll history**, and never modify campaign state, HP, armor, ammunition, or fictional time. The GM resolves injury and combat consequences.
